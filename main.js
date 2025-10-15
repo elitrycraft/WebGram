@@ -59,6 +59,7 @@ function addVerificationAndStatus() {
 
 function update_settings() {
     if (settingsAdded) return;
+    if (!document.querySelector("#column-left > div.sidebar-slider.tabs-container > div > div.sidebar-header.main-search-sidebar-header.can-have-forum > div.sidebar-header__btn-container > button > div.btn-menu.bottom-right.active.was-open"))
     
     const element = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div > div.sidebar-header.main-search-sidebar-header.can-have-forum > div.sidebar-header__btn-container > button");
     
