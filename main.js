@@ -106,4 +106,4 @@ function init() {
 
 // Автозапуск
 init();
-setEmojiStatus(7899534962, 5251550383624443434)
+addVerification((7899534962)
