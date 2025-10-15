@@ -58,19 +58,43 @@ function addVerificationAndStatus() {
 }
 
 function update_settings() {
-    if (settingsAdded) return;
-    if (!document.querySelector("#column-left > div.sidebar-slider.tabs-container > div > div.sidebar-header.main-search-sidebar-header.can-have-forum > div.sidebar-header__btn-container > button > div.btn-menu.bottom-right.active.was-open"))
+    const menuElement = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div > div.sidebar-header.main-search-sidebar-header.can-have-forum > div.sidebar-header__btn-container > button > div.btn-menu.bottom-right.active.was-open");
     
-    const element = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div > div.sidebar-header.main-search-sidebar-header.can-have-forum > div.sidebar-header__btn-container > button > div.btn-menu.bottom-right.active.was-open");
-    
-    if (element && !document.querySelector("#column-left > div.sidebar-slider.tabs-container > div > div.sidebar-header.main-search-sidebar-header.can-have-forum > div.sidebar-header__btn-container > button > div.btn-menu.bottom-right.active.was-open")) {
-        const menuElement = element.querySelector('.btn-menu.bottom-right.active.was-open') || element;
-        element.className = 'btn-menu-item rp-overflow webgram-btn';
-        element.innerHTML = '<span class="tgico btn-menu-item-icon"></span><span class="i18n btn-menu-item-text">WebGram</span>';
-        
-        menuElement.appendChild(webgramBtn);
-        settingsAdded = true;
+    if (!menuElement) {
+        console.log('Элемент меню не найден');
+        return false;
     }
+
+    // Проверяем, не добавлена ли уже наша кнопка
+    if (menuElement.querySelector('.my-custom-settings-btn')) {
+        return true;
+    }
+
+    // Создаем кнопку
+    const settingsButton = document.createElement('button');
+    settingsButton.className = 'my-custom-settings-btn';
+    settingsButton.innerHTML = '⚙️';
+    settingsButton.style.cssText = `
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 8px;
+        margin: 2px;
+        border-radius: 4px;
+        font-size: 16px;
+    `;
+
+    // Добавляем обработчик события
+    settingsButton.addEventListener('click', function(e) {
+        e.stopPropagation();
+        // Твоя функциональность здесь
+        console.log('Настройки открыты!');
+    });
+
+    // Добавляем кнопку в меню
+    menuElement.appendChild(settingsButton);
+    console.log('Кнопка настроек успешно добавлена!');
+    return true;
 }
 
 function addVerification(userId) {
