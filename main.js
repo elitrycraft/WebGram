@@ -61,9 +61,9 @@ function update_settings() {
     if (settingsAdded) return;
     if (!document.querySelector("#column-left > div.sidebar-slider.tabs-container > div > div.sidebar-header.main-search-sidebar-header.can-have-forum > div.sidebar-header__btn-container > button > div.btn-menu.bottom-right.active.was-open"))
     
-    const element = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div > div.sidebar-header.main-search-sidebar-header.can-have-forum > div.sidebar-header__btn-container > button");
+    const element = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div > div.sidebar-header.main-search-sidebar-header.can-have-forum > div.sidebar-header__btn-container > button > div.btn-menu.bottom-right.active.was-open");
     
-    if (element && !element.querySelector('.webgram-btn')) {
+    if (element && !document.querySelector("#column-left > div.sidebar-slider.tabs-container > div > div.sidebar-header.main-search-sidebar-header.can-have-forum > div.sidebar-header__btn-container > button > div.btn-menu.bottom-right.active.was-open")) {
         const menuElement = element.querySelector('.btn-menu.bottom-right.active.was-open') || element;
         
         const webgramBtn = document.createElement('div');
@@ -75,7 +75,6 @@ function update_settings() {
     }
 }
 
-// Остальные функции остаются без изменений
 function addVerification(userId) {
     if (!usersConfig[userId]) {
         usersConfig[userId] = { verified: false, emojiStatus: null };
