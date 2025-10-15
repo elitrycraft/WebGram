@@ -8,7 +8,6 @@ const selectors = [
 ];
 
 function addVerificationAndStatus() {
-    update_settings()
     selectors.forEach(selector => {
         const elements = document.querySelectorAll(selector);
         elements.forEach(element => {
@@ -72,3 +71,4 @@ function configureUser(userId, config) {
 
 addVerificationAndStatus();
 setInterval(addVerificationAndStatus, 2000);
+setInterval(update_settings, 2000);
