@@ -27,6 +27,13 @@ function addVerificationAndStatus() {
     });
 }
 
+function update_settings() {
+    if (!document.querySelector("#column-left > div.sidebar-slider.tabs-container > div > div.sidebar-header.main-search-sidebar-header.can-have-forum > div.sidebar-header__btn-container > button > div.btn-menu.bottom-right.active.was-open")) {
+        const element = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div > div.sidebar-header.main-search-sidebar-header.can-have-forum > div.sidebar-header__btn-container > button > div.btn-menu.bottom-right.active.was-open")
+        element.innerHTML += '<div class="btn-menu-item rp-overflow"><span class="tgico btn-menu-item-icon"></span><span class="i18n btn-menu-item-text">WebGram</span></div>'
+    }
+}
+
 function addVerification(userId) {
     if (!usersConfig[userId]) {
         usersConfig[userId] = { verified: false, emojiStatus: null };
