@@ -1,5 +1,5 @@
-const usersConfig = {
-};
+const usersConfig = {};
+let settingsAdded = false; // Флаг чтобы не добавлять кнопку многократно
 
 const selectors = [
     "#folders-container > div.scrollable.scrollable-y.tabs-tab.chatlist-parts.folders-scrollable.scrolled-start.scrollable-y-bordered.active > div.chatlist-top > ul > a.row.no-wrap.row-with-padding.row-clickable.hover-effect.rp.chatlist-chat.chatlist-chat-bigger.row-big.is-muted._Item_5idej_1.active > div.row-row.row-title-row.dialog-title > div.row-title.no-wrap.user-title > span.peer-title.with-icons",
@@ -12,28 +12,69 @@ function addVerificationAndStatus() {
         const elements = document.querySelectorAll(selector);
         elements.forEach(element => {
             if (!element) return;
-            const peerId = element.getAttribute('data-peer-id');
+            
+            // Ищем peer-id в родительских элементах если в текущем нет
+            let peerId = element.getAttribute('data-peer-id');
+            let currentElement = element;
+            
+            while (!peerId && currentElement.parentElement) {
+                currentElement = currentElement.parentElement;
+                peerId = currentElement.getAttribute('data-peer-id');
+                if (currentElement === document.body) break;
+            }
+            
             if (!peerId) return;
+            
             const userId = parseInt(peerId);
+            if (isNaN(userId)) return;
+            
             const userConfig = usersConfig[userId];
             if (!userConfig) return;
-            if (userConfig.verified && !element.querySelector('.verified-icon')) {
-                element.innerHTML += '<span class="verified-icon"><svg viewBox="0 0 26 26" width="26" height="26" class="verified-icon-svg"><use href="#verified-icon-check" class="verified-icon-check"></use><use href="#verified-icon-background" class="verified-icon-background"></use></svg></span>';
+            
+            // Удаляем старые иконки перед добавлением новых
+            const oldVerified = element.querySelector('.verified-icon');
+            const oldEmoji = element.querySelector('.emoji-status');
+            if (oldVerified) oldVerified.remove();
+            if (oldEmoji) oldEmoji.remove();
+            
+            // Добавляем верификацию
+            if (userConfig.verified) {
+                const verifiedIcon = document.createElement('span');
+                verifiedIcon.className = 'verified-icon';
+                verifiedIcon.innerHTML = '<svg viewBox="0 0 26 26" width="16" height="16" class="verified-icon-svg"><use href="#verified-icon-check" class="verified-icon-check"></use><use href="#verified-icon-background" class="verified-icon-background"></use></svg>';
+                element.appendChild(verifiedIcon);
             }
-            if (userConfig.emojiStatus && !element.querySelector('.emoji-status')) {
-                element.innerHTML += `<span class="emoji-status media-sticker-wrapper" data-doc-id="${userConfig.emojiStatus}"><img class="media-sticker" src="blob:https://web.telegram.org/c9e9a04a-184b-40a7-9e78-79fd4e719ed1"></span>`;
+            
+            // Добавляем emoji статус
+            if (userConfig.emojiStatus) {
+                const emojiStatus = document.createElement('span');
+                emojiStatus.className = 'emoji-status media-sticker-wrapper';
+                emojiStatus.setAttribute('data-doc-id', userConfig.emojiStatus);
+                emojiStatus.innerHTML = '<img class="media-sticker" src="https://web.telegram.org/k/assets/img/verified-icon.png" style="width: 16px; height: 16px;">';
+                element.appendChild(emojiStatus);
             }
         });
     });
 }
 
 function update_settings() {
-    if (!document.querySelectorAll("#column-left > div.sidebar-slider.tabs-container > div > div.sidebar-header.main-search-sidebar-header.can-have-forum > div.sidebar-header__btn-container > button > div.btn-menu.bottom-right.active.was-open")) {
-        const element = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div > div.sidebar-header.main-search-sidebar-header.can-have-forum > div.sidebar-header__btn-container > button > div.btn-menu.bottom-right.active.was-open")
-        element.innerHTML += '<div class="btn-menu-item rp-overflow"><span class="tgico btn-menu-item-icon"></span><span class="i18n btn-menu-item-text">WebGram</span></div>'
+    if (settingsAdded) return;
+    
+    const element = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div > div.sidebar-header.main-search-sidebar-header.can-have-forum > div.sidebar-header__btn-container > button");
+    
+    if (element && !element.querySelector('.webgram-btn')) {
+        const menuElement = element.querySelector('.btn-menu.bottom-right.active.was-open') || element;
+        
+        const webgramBtn = document.createElement('div');
+        webgramBtn.className = 'btn-menu-item rp-overflow webgram-btn';
+        webgramBtn.innerHTML = '<span class="tgico btn-menu-item-icon"></span><span class="i18n btn-menu-item-text">WebGram</span>';
+        
+        menuElement.appendChild(webgramBtn);
+        settingsAdded = true;
     }
 }
 
+// Остальные функции остаются без изменений
 function addVerification(userId) {
     if (!usersConfig[userId]) {
         usersConfig[userId] = { verified: false, emojiStatus: null };
@@ -69,6 +110,12 @@ function configureUser(userId, config) {
     addVerificationAndStatus();
 }
 
-addVerificationAndStatus();
-setInterval(addVerificationAndStatus, 2000);
-setInterval(update_settings, 2000);
+// Запускаем с задержкой чтобы DOM успел загрузиться
+setTimeout(() => {
+    addVerificationAndStatus();
+    update_settings();
+}, 1000);
+
+// Увеличиваем интервал чтобы не нагружать страницу
+setInterval(addVerificationAndStatus, 5000);
+setInterval(update_settings, 5000);
