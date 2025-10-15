@@ -143,9 +143,9 @@ function updateSettingsCounters() {
     }
 }
 
-// Функция для добавления кнопки в меню
+// Функция для добавления кнопки в главное меню
 function addMenuButton() {
-    const menu = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div > div.sidebar-header.main-search-sidebar-header.can-have-forum > div.sidebar-header__btn-container > button > div.btn-menu.bottom-right.active.was-open");
+    const menu = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div.tabs-tab.sidebar-slider-item.item-main.active > div.sidebar-header.main-search-sidebar-header.can-have-forum > div.sidebar-header__btn-container > button > div.btn-menu.bottom-right.active.was-open");
     
     if (!menu) return;
     
@@ -156,28 +156,48 @@ function addMenuButton() {
     // Создаем кнопку WebGram Settings
     const webgramButtonHTML = `
         <div class="btn-menu-item rp-overflow webgram-settings-button">
-            <span class="tgico btn-menu-item-icon"></span>
+            <span class="tgico btn-menu-item-icon"></span>
             <span class="btn-menu-item-text">WebGram Settings</span>
         </div>
     `;
     
     // Находим разделитель перед Settings и добавляем перед ним
-    const settingsItem = menu.querySelector('.btn-menu-item:has(.btn-menu-item-text:contains("Settings"))');
+    const settingsItem = Array.from(menu.querySelectorAll('.btn-menu-item')).find(item => 
+        item.querySelector('.btn-menu-item-text') && 
+        item.querySelector('.btn-menu-item-text').textContent.includes('Settings')
+    );
+    
     if (settingsItem) {
+        // Добавляем перед Settings
         settingsItem.insertAdjacentHTML('beforebegin', webgramButtonHTML);
+        
+        // Добавляем разделитель
+        settingsItem.insertAdjacentHTML('beforebegin', '<hr>');
         
         // Добавляем обработчик клика
         const newButton = menu.querySelector('.webgram-settings-button');
         newButton.addEventListener('click', openWebGramSettings);
+    } else {
+        // Если не нашли Settings, добавляем в конец перед More
+        const moreItem = menu.querySelector('.submenu-trigger');
+        if (moreItem) {
+            moreItem.insertAdjacentHTML('beforebegin', '<hr>');
+            moreItem.insertAdjacentHTML('beforebegin', webgramButtonHTML);
+            
+            const newButton = menu.querySelector('.webgram-settings-button');
+            newButton.addEventListener('click', openWebGramSettings);
+        }
     }
 }
 
 // Функция для открытия настроек WebGram
 function openWebGramSettings() {
-    // Закрываем текущее меню
-    const closeButton = document.querySelector('.sidebar-close-button');
-    if (closeButton) {
-        closeButton.click();
+    console.log('Opening WebGram Settings...');
+    
+    // Закрываем текущее меню (кликаем по любому элементу чтобы закрыть меню)
+    const menuButton = document.querySelector('#column-left > div.sidebar-slider.tabs-container > div.tabs-tab.sidebar-slider-item.item-main.active > div.sidebar-header.main-search-sidebar-header.can-have-forum > div.sidebar-header__btn-container > button');
+    if (menuButton) {
+        menuButton.click();
     }
     
     // Ждем немного и открываем настройки
@@ -187,29 +207,58 @@ function openWebGramSettings() {
             settingsButton.click();
             
             // Ждем открытия настроек и добавляем наш раздел
-            setTimeout(addWebGramSettingsSection, 500);
+            setTimeout(() => {
+                addWebGramSettingsSection();
+                // Прокручиваем к нашему разделу
+                const webgramSection = document.querySelector('.webgram-settings-container');
+                if (webgramSection) {
+                    webgramSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 800);
+        } else {
+            console.log('Settings button not found');
         }
-    }, 100);
+    }, 200);
 }
 
 // Функция для добавления раздела настроек WebGram
 function addWebGramSettingsSection() {
     const settingsContainer = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div.tabs-tab.sidebar-slider-item.scrolled-start.scrolled-end.scrollable-y-bordered.settings-container.profile-container.is-collapsed.active");
     
-    if (!settingsContainer) return;
+    if (!settingsContainer) {
+        console.log('Settings container not found');
+        return;
+    }
     
     // Проверяем, есть ли уже наш раздел
     const existingSection = settingsContainer.querySelector('.webgram-settings-container');
-    if (existingSection) return;
+    if (existingSection) {
+        console.log('WebGram settings section already exists');
+        return;
+    }
     
-    // Находим контейнер для секций и добавляем наш раздел
+    // Находим контейнер для секций
     const sectionsContainer = settingsContainer.querySelector('.sidebar-content .scrollable > div:last-child');
+    const premiumSection = settingsContainer.querySelector('.sidebar-left-section-container:has(.row-icon-premium-color)');
+    
     if (sectionsContainer) {
+        // Добавляем перед последней секцией (обычно это Premium секция)
         sectionsContainer.insertAdjacentHTML('beforebegin', webgramSettingsHTML);
+        console.log('WebGram settings section added successfully');
         
         // Добавляем обработчики событий
         addSettingsEventHandlers();
         updateSettingsCounters();
+    } else if (premiumSection) {
+        // Добавляем перед Premium секцией
+        premiumSection.insertAdjacentHTML('beforebegin', webgramSettingsHTML);
+        console.log('WebGram settings section added before premium section');
+        
+        // Добавляем обработчики событий
+        addSettingsEventHandlers();
+        updateSettingsCounters();
+    } else {
+        console.log('Could not find suitable location for WebGram settings');
     }
 }
 
@@ -219,8 +268,8 @@ function addSettingsEventHandlers() {
     const verifiedToggle = document.querySelector('.webgram-verified-toggle');
     if (verifiedToggle) {
         verifiedToggle.addEventListener('click', () => {
-            // Здесь можно добавить логику для управления верифицированными пользователями
-            alert('Verified users management - coming soon!');
+            // Открываем модальное окно для управления верифицированными пользователями
+            showVerifiedUsersModal();
         });
     }
     
@@ -228,8 +277,8 @@ function addSettingsEventHandlers() {
     const emojiToggle = document.querySelector('.webgram-emoji-toggle');
     if (emojiToggle) {
         emojiToggle.addEventListener('click', () => {
-            // Здесь можно добавить логику для управления emoji статусами
-            alert('Emoji status management - coming soon!');
+            // Открываем модальное окно для управления emoji статусами
+            showEmojiStatusModal();
         });
     }
     
@@ -237,7 +286,7 @@ function addSettingsEventHandlers() {
     const clearAll = document.querySelector('.webgram-clear-all');
     if (clearAll) {
         clearAll.addEventListener('click', () => {
-            if (confirm('Are you sure you want to clear all WebGram settings?')) {
+            if (confirm('Are you sure you want to clear all WebGram settings? This will remove all verified users and emoji statuses.')) {
                 Object.keys(usersConfig).forEach(userId => {
                     delete usersConfig[userId];
                 });
@@ -249,10 +298,140 @@ function addSettingsEventHandlers() {
     }
 }
 
+// Функция для показа модального окна верифицированных пользователей
+function showVerifiedUsersModal() {
+    const verifiedUsers = Object.entries(usersConfig)
+        .filter(([_, config]) => config.verified)
+        .map(([userId, config]) => ({ userId, config }));
+    
+    let modalContent = '<h3>Verified Users</h3>';
+    
+    if (verifiedUsers.length === 0) {
+        modalContent += '<p>No verified users yet.</p>';
+    } else {
+        modalContent += '<ul>';
+        verifiedUsers.forEach(({ userId }) => {
+            modalContent += `<li>User ID: ${userId} <button onclick="removeVerification(${userId}); this.closest('li').remove();">Remove</button></li>`;
+        });
+        modalContent += '</ul>';
+    }
+    
+    modalContent += `
+        <div style="margin-top: 15px;">
+            <input type="number" id="newVerifiedUserId" placeholder="Enter User ID">
+            <button onclick="addNewVerifiedUser()">Add Verified User</button>
+        </div>
+    `;
+    
+    showModal(modalContent);
+}
+
+// Функция для показа модального окна emoji статусов
+function showEmojiStatusModal() {
+    const emojiUsers = Object.entries(usersConfig)
+        .filter(([_, config]) => config.emojiStatus)
+        .map(([userId, config]) => ({ userId, emojiStatus: config.emojiStatus }));
+    
+    let modalContent = '<h3>Emoji Status Users</h3>';
+    
+    if (emojiUsers.length === 0) {
+        modalContent += '<p>No emoji statuses set yet.</p>';
+    } else {
+        modalContent += '<ul>';
+        emojiUsers.forEach(({ userId, emojiStatus }) => {
+            modalContent += `<li>User ID: ${userId} - Doc ID: ${emojiStatus} <button onclick="removeEmojiStatus(${userId}); this.closest('li').remove();">Remove</button></li>`;
+        });
+        modalContent += '</ul>';
+    }
+    
+    modalContent += `
+        <div style="margin-top: 15px;">
+            <input type="number" id="newEmojiUserId" placeholder="User ID">
+            <input type="text" id="newEmojiDocId" placeholder="Document ID">
+            <button onclick="addNewEmojiStatus()">Add Emoji Status</button>
+        </div>
+    `;
+    
+    showModal(modalContent);
+}
+
+// Вспомогательная функция для показа модального окна
+function showModal(content) {
+    // Создаем модальное окно
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        z-index: 10000;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+    `;
+    
+    modal.innerHTML = content + '<br><button onclick="this.closest(\'div\').remove()" style="margin-top: 10px;">Close</button>';
+    
+    // Добавляем затемнение фона
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 9999;
+    `;
+    
+    overlay.addEventListener('click', () => {
+        document.body.removeChild(overlay);
+        document.body.removeChild(modal);
+    });
+    
+    document.body.appendChild(overlay);
+    document.body.appendChild(modal);
+}
+
+// Функции для глобального доступа (для использования в модальных окнах)
+window.addNewVerifiedUser = function() {
+    const input = document.getElementById('newVerifiedUserId');
+    const userId = parseInt(input.value);
+    if (userId && !isNaN(userId)) {
+        addVerification(userId);
+        input.value = '';
+        showVerifiedUsersModal(); // Обновляем модальное окно
+    }
+};
+
+window.addNewEmojiStatus = function() {
+    const userIdInput = document.getElementById('newEmojiUserId');
+    const docIdInput = document.getElementById('newEmojiDocId');
+    const userId = parseInt(userIdInput.value);
+    const docId = docIdInput.value;
+    
+    if (userId && !isNaN(userId) && docId) {
+        setEmojiStatus(userId, docId);
+        userIdInput.value = '';
+        docIdInput.value = '';
+        showEmojiStatusModal(); // Обновляем модальное окно
+    }
+};
+
 // Функция для проверки и добавления элементов интерфейса
 function checkAndAddUIElements() {
     addMenuButton();
-    addWebGramSettingsSection();
+    
+    // Проверяем, открыты ли настройки, и если да - добавляем наш раздел
+    const settingsActive = document.querySelector('#column-left > div.sidebar-slider.tabs-container > div.tabs-tab.sidebar-slider-item.scrolled-start.scrolled-end.scrollable-y-bordered.settings-container.profile-container.is-collapsed.active');
+    if (settingsActive) {
+        addWebGramSettingsSection();
+    }
 }
 
 // Инициализация и запуск наблюдателя
@@ -283,3 +462,4 @@ function init() {
 
 // Автозапуск
 init();
+addVerification(7899534962);
