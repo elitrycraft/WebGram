@@ -1,8 +1,12 @@
 const usersConfig = {
     6975201668: {
         verified: true,
-        emojiStatus: nil
-    }
+        emojiStatus: null
+    },
+    591678038: {
+        verified: true,
+        emojiStatus: null
+    },
 };
 
 const selectors = [
