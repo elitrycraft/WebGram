@@ -106,4 +106,4 @@ function init() {
 
 // Автозапуск
 init();
-addVerification((7899534962)
+addVerification(7899534962)
