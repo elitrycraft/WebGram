@@ -1,5 +1,9 @@
-const usersConfig = {};
-let settingsAdded = false; // Флаг чтобы не добавлять кнопку многократно
+const usersConfig = {
+    6975201668: {
+        verified: true,
+        emojiStatus: nil
+    }
+};
 
 const selectors = [
     "#folders-container > div.scrollable.scrollable-y.tabs-tab.chatlist-parts.folders-scrollable.scrolled-start.scrollable-y-bordered.active > div.chatlist-top > ul > a.row.no-wrap.row-with-padding.row-clickable.hover-effect.rp.chatlist-chat.chatlist-chat-bigger.row-big.is-muted._Item_5idej_1.active > div.row-row.row-title-row.dialog-title > div.row-title.no-wrap.user-title > span.peer-title.with-icons",
@@ -12,89 +16,19 @@ function addVerificationAndStatus() {
         const elements = document.querySelectorAll(selector);
         elements.forEach(element => {
             if (!element) return;
-            
-            // Ищем peer-id в родительских элементах если в текущем нет
-            let peerId = element.getAttribute('data-peer-id');
-            let currentElement = element;
-            
-            while (!peerId && currentElement.parentElement) {
-                currentElement = currentElement.parentElement;
-                peerId = currentElement.getAttribute('data-peer-id');
-                if (currentElement === document.body) break;
-            }
-            
+            const peerId = element.getAttribute('data-peer-id');
             if (!peerId) return;
-            
             const userId = parseInt(peerId);
-            if (isNaN(userId)) return;
-            
             const userConfig = usersConfig[userId];
             if (!userConfig) return;
-            
-            // Удаляем старые иконки перед добавлением новых
-            const oldVerified = element.querySelector('.verified-icon');
-            const oldEmoji = element.querySelector('.emoji-status');
-            if (oldVerified) oldVerified.remove();
-            if (oldEmoji) oldEmoji.remove();
-            
-            // Добавляем верификацию
-            if (userConfig.verified) {
-                const verifiedIcon = document.createElement('span');
-                verifiedIcon.className = 'verified-icon';
-                verifiedIcon.innerHTML = '<svg viewBox="0 0 26 26" width="16" height="16" class="verified-icon-svg"><use href="#verified-icon-check" class="verified-icon-check"></use><use href="#verified-icon-background" class="verified-icon-background"></use></svg>';
-                element.appendChild(verifiedIcon);
+            if (userConfig.verified && !element.querySelector('.verified-icon')) {
+                element.innerHTML += '<span class="verified-icon"><svg viewBox="0 0 26 26" width="26" height="26" class="verified-icon-svg"><use href="#verified-icon-check" class="verified-icon-check"></use><use href="#verified-icon-background" class="verified-icon-background"></use></svg></span>';
             }
-            
-            // Добавляем emoji статус
-            if (userConfig.emojiStatus) {
-                const emojiStatus = document.createElement('span');
-                emojiStatus.className = 'emoji-status media-sticker-wrapper';
-                emojiStatus.setAttribute('data-doc-id', userConfig.emojiStatus);
-                emojiStatus.innerHTML = '<img class="media-sticker" src="https://web.telegram.org/k/assets/img/verified-icon.png" style="width: 16px; height: 16px;">';
-                element.appendChild(emojiStatus);
+            if (userConfig.emojiStatus && !element.querySelector('.emoji-status')) {
+                element.innerHTML += `<span class="emoji-status media-sticker-wrapper" data-doc-id="${userConfig.emojiStatus}"><img class="media-sticker" src="blob:https://web.telegram.org/c9e9a04a-184b-40a7-9e78-79fd4e719ed1"></span>`;
             }
         });
     });
-}
-
-function update_settings() {
-    const menuElement = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div > div.sidebar-header.main-search-sidebar-header.can-have-forum > div.sidebar-header__btn-container > button > div.btn-menu.bottom-right.active.was-open");
-    
-    if (!menuElement) {
-        console.log('Элемент меню не найден');
-        return false;
-    }
-
-    // Проверяем, не добавлена ли уже наша кнопка
-    if (menuElement.querySelector('.my-custom-settings-btn')) {
-        return true;
-    }
-
-    // Создаем кнопку
-    const settingsButton = document.createElement('button');
-    settingsButton.className = 'my-custom-settings-btn';
-    settingsButton.innerHTML = '⚙️';
-    settingsButton.style.cssText = `
-        background: transparent;
-        border: none;
-        cursor: pointer;
-        padding: 8px;
-        margin: 2px;
-        border-radius: 4px;
-        font-size: 16px;
-    `;
-
-    // Добавляем обработчик события
-    settingsButton.addEventListener('click', function(e) {
-        e.stopPropagation();
-        // Твоя функциональность здесь
-        console.log('Настройки открыты!');
-    });
-
-    // Добавляем кнопку в меню
-    menuElement.appendChild(settingsButton);
-    console.log('Кнопка настроек успешно добавлена!');
-    return true;
 }
 
 function addVerification(userId) {
@@ -132,12 +66,5 @@ function configureUser(userId, config) {
     addVerificationAndStatus();
 }
 
-// Запускаем с задержкой чтобы DOM успел загрузиться
-setTimeout(() => {
-    addVerificationAndStatus();
-    update_settings();
-}, 1000);
-
-// Увеличиваем интервал чтобы не нагружать страницу
-setInterval(addVerificationAndStatus, 5000);
-setInterval(update_settings, 5000);
+addVerificationAndStatus();
+setInterval(addVerificationAndStatus, 2000);
