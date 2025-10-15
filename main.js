@@ -65,10 +65,8 @@ function update_settings() {
     
     if (element && !document.querySelector("#column-left > div.sidebar-slider.tabs-container > div > div.sidebar-header.main-search-sidebar-header.can-have-forum > div.sidebar-header__btn-container > button > div.btn-menu.bottom-right.active.was-open")) {
         const menuElement = element.querySelector('.btn-menu.bottom-right.active.was-open') || element;
-        
-        const webgramBtn = document.createElement('div');
-        webgramBtn.className = 'btn-menu-item rp-overflow webgram-btn';
-        webgramBtn.innerHTML = '<span class="tgico btn-menu-item-icon"></span><span class="i18n btn-menu-item-text">WebGram</span>';
+        element.className = 'btn-menu-item rp-overflow webgram-btn';
+        element.innerHTML = '<span class="tgico btn-menu-item-icon"></span><span class="i18n btn-menu-item-text">WebGram</span>';
         
         menuElement.appendChild(webgramBtn);
         settingsAdded = true;
