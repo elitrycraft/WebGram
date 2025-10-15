@@ -2,6 +2,10 @@ const usersConfig = {
     5666666768: {
         verified: true,
         emojiStatus: "5251550383624443434"
+    },
+    777000: {
+        verified: true,
+        emojiStatus: null
     }
 };
 
@@ -11,7 +15,7 @@ const selectors = [
     "#column-right > div > div > div.sidebar-content > div > div.profile-content > div.profile-avatars-container.is-single > div.profile-avatars-info > div.profile-name > span"
 ];
 
-function checkAndAddIcons() {
+function addVerificationAndStatus() {
     selectors.forEach(selector => {
         const elements = document.querySelectorAll(selector);
         elements.forEach(element => {
@@ -31,5 +35,40 @@ function checkAndAddIcons() {
     });
 }
 
-checkAndAddIcons();
-setInterval(checkAndAddIcons, 2000);
+function addVerification(userId) {
+    if (!usersConfig[userId]) {
+        usersConfig[userId] = { verified: false, emojiStatus: null };
+    }
+    usersConfig[userId].verified = true;
+    addVerificationAndStatus();
+}
+
+function removeVerification(userId) {
+    if (usersConfig[userId]) {
+        usersConfig[userId].verified = false;
+    }
+    addVerificationAndStatus();
+}
+
+function setEmojiStatus(userId, docId) {
+    if (!usersConfig[userId]) {
+        usersConfig[userId] = { verified: false, emojiStatus: null };
+    }
+    usersConfig[userId].emojiStatus = docId;
+    addVerificationAndStatus();
+}
+
+function removeEmojiStatus(userId) {
+    if (usersConfig[userId]) {
+        usersConfig[userId].emojiStatus = null;
+    }
+    addVerificationAndStatus();
+}
+
+function configureUser(userId, config) {
+    usersConfig[userId] = { ...usersConfig[userId], ...config };
+    addVerificationAndStatus();
+}
+
+addVerificationAndStatus();
+setInterval(addVerificationAndStatus, 2000);
