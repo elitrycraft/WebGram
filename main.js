@@ -3,17 +3,20 @@ const usersConfig = {};
 
 // Селекторы для разных мест отображения имени пользователя
 const selectors = [
-    "#folders-container > div.scrollable.scrollable-y.tabs-tab.chatlist-parts.folders-scrollable.scrolled-start.scrollable-y-bordered.active > div.chatlist-top > ul > a.row.no-wrap.row-with-padding.row-clickable.hover-effect.rp.chatlist-chat.chatlist-chat-bigger.row-big.is-muted._Item_5idej_1.active > div.row-row.row-title-row.dialog-title > div.row-title.no-wrap.user-title > span.peer-title.with-icons",
-    "#column-center > div.chats-container.tabs-container > div > div.sidebar-header.topbar.has-avatar > div.chat-info-container > div.chat-info > div > div.content > div.top > div > span",
-    "#column-right > div > div > div.sidebar-content > div > div.profile-content > div.profile-avatars-container.is-single > div.profile-avatars-info > div.profile-name > span"
+    ".peer-title[data-peer-id]",
+    ".user-title .peer-title",
+    ".profile-name .peer-title",
+    ".dialog-title .peer-title"
 ];
 
 // HTML для verified иконки
-const verifiedIconHTML = '<span class="verified-icon"><svg viewBox="0 0 26 26" width="26" height="26" class="verified-icon-svg"><use href="#verified-icon-check" class="verified-icon-check"></use><use href="#verified-icon-background" class="verified-icon-background"></use></svg></span>';
+const verifiedIconHTML = '<span class="verified-icon" style="margin-left: 4px; display: inline-flex; align-items: center;"><svg viewBox="0 0 26 26" width="16" height="16" style="color: #0088cc;"><use href="#verified-icon-check"></use><use href="#verified-icon-background"></use></svg></span>';
 
 // Функция для получения emoji статуса
 function getEmojiStatusHTML(docId) {
-    return `<span class="emoji-status media-sticker-wrapper" data-doc-id="${docId}"><img class="media-sticker" src="blob:https://web.telegram.org/c9e9a04a-184b-40a7-9e78-79fd4e719ed1"></span>`;
+    return `<span class="emoji-status media-sticker-wrapper" style="margin-left: 4px; display: inline-flex; align-items: center;" data-doc-id="${docId}">
+        <img class="media-sticker" src="blob:https://web.telegram.org/c9e9a04a-184b-40a7-9e78-79fd4e719ed1" style="width: 16px; height: 16px;">
+    </span>`;
 }
 
 // Основная функция добавления элементов
@@ -32,12 +35,19 @@ function addVerificationAndStatus() {
             
             if (!userConfig) return;
             
-            if (userConfig.verified && !element.querySelector('.verified-icon')) {
-                element.innerHTML += verifiedIconHTML;
+            // Удаляем старые иконки
+            const oldVerified = element.querySelector('.verified-icon');
+            const oldEmoji = element.querySelector('.emoji-status');
+            if (oldVerified) oldVerified.remove();
+            if (oldEmoji) oldEmoji.remove();
+            
+            // Добавляем новые иконки
+            if (userConfig.verified) {
+                element.insertAdjacentHTML('beforeend', verifiedIconHTML);
             }
             
-            if (userConfig.emojiStatus && !element.querySelector('.emoji-status')) {
-                element.innerHTML += getEmojiStatusHTML(userConfig.emojiStatus);
+            if (userConfig.emojiStatus) {
+                element.insertAdjacentHTML('beforeend', getEmojiStatusHTML(userConfig.emojiStatus));
             }
         });
     });
@@ -81,623 +91,412 @@ function removeEmojiStatus(userId) {
     console.log(`🗑️ Removed emoji status for user ${userId}`);
 }
 
-// Функция для создания кнопки WebGram в интерфейсе
-function createWebGramButton() {
+// Функция для добавления кнопки в главное меню
+function addWebGramToMenu() {
+    const menu = document.querySelector('.btn-menu.bottom-right.active');
+    if (!menu) return;
+    
     // Проверяем, есть ли уже наша кнопка
-    if (document.querySelector('.webgram-floating-btn')) {
-        return;
-    }
+    if (menu.querySelector('.webgram-menu-btn')) return;
     
-    // Создаем плавающую кнопку
-    const webgramBtn = document.createElement('div');
-    webgramBtn.className = 'webgram-floating-btn';
-    webgramBtn.innerHTML = `
-        <div style="
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #0088cc, #00a884);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 4px 20px rgba(0, 136, 204, 0.4);
-            z-index: 9998;
-            transition: all 0.3s ease;
-            border: 3px solid white;
-        ">
-            <span style="
-                color: white;
-                font-size: 24px;
-                font-weight: bold;
-            ">WG</span>
+    // Создаем кнопку WebGram
+    const webgramBtnHTML = `
+        <div class="btn-menu-item rp-overflow webgram-menu-btn">
+            <span class="tgico btn-menu-item-icon"></span>
+            <span class="btn-menu-item-text">WebGram Settings</span>
         </div>
     `;
     
-    webgramBtn.addEventListener('click', showWebGramPanel);
-    document.body.appendChild(webgramBtn);
+    // Находим кнопку Settings и добавляем перед ней
+    const settingsBtn = Array.from(menu.querySelectorAll('.btn-menu-item')).find(item => 
+        item.querySelector('.btn-menu-item-text')?.textContent.includes('Settings')
+    );
     
-    console.log('🎯 WebGram button created');
+    if (settingsBtn) {
+        settingsBtn.insertAdjacentHTML('beforebegin', '<hr>');
+        settingsBtn.insertAdjacentHTML('beforebegin', webgramBtnHTML);
+        
+        // Добавляем обработчик
+        const newBtn = menu.querySelector('.webgram-menu-btn');
+        newBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            closeAllMenus();
+            setTimeout(showWebGramSettings, 100);
+        });
+    }
 }
 
-// Функция для показа панели WebGram
-function showWebGramPanel() {
-    // Удаляем существующую панель если есть
-    const existingPanel = document.querySelector('.webgram-panel');
-    if (existingPanel) {
-        document.body.removeChild(existingPanel);
-        return;
-    }
+// Функция для закрытия всех меню
+function closeAllMenus() {
+    const menus = document.querySelectorAll('.btn-menu.active, .backdrop');
+    menus.forEach(menu => {
+        menu.classList.remove('active');
+        if (menu.parentNode) menu.parentNode.remove();
+    });
+}
+
+// Функция для показа настроек WebGram
+function showWebGramSettings() {
+    // Закрываем существующие настройки если есть
+    closeWebGramSettings();
     
-    const verifiedCount = Object.values(usersConfig).filter(user => user.verified).length;
-    const emojiCount = Object.values(usersConfig).filter(user => user.emojiStatus).length;
+    const verifiedCount = Object.values(usersConfig).filter(u => u.verified).length;
+    const emojiCount = Object.values(usersConfig).filter(u => u.emojiStatus).length;
     
-    const panelHTML = `
-        <div class="webgram-panel" style="
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            z-index: 10000;
-            width: 400px;
-            max-width: 90vw;
-            max-height: 80vh;
-            overflow: hidden;
-            font-family: system-ui, -apple-system, sans-serif;
-        ">
-            <div style="
-                background: linear-gradient(135deg, #0088cc, #00a884);
-                color: white;
-                padding: 20px;
-                text-align: center;
-            ">
-                <h2 style="margin: 0; font-size: 24px;">⚙️ WebGram Settings</h2>
-                <div style="display: flex; justify-content: center; gap: 20px; margin-top: 10px;">
-                    <div>
-                        <div style="font-size: 12px;">Verified</div>
-                        <div style="font-size: 20px; font-weight: bold;">${verifiedCount}</div>
-                    </div>
-                    <div>
-                        <div style="font-size: 12px;">Emoji Status</div>
-                        <div style="font-size: 20px; font-weight: bold;">${emojiCount}</div>
-                    </div>
+    // Создаем контейнер настроек в стиле Telegram
+    const settingsHTML = `
+        <div class="sidebar-slider-item settings-container profile-container active webgram-settings" style="transform: translateX(0%);">
+            <div class="sidebar-header">
+                <button class="btn-icon sidebar-close-button" onclick="closeWebGramSettings()">
+                    <span class="tgico button-icon"></span>
+                </button>
+                <div class="sidebar-header__title">
+                    <span>WebGram Settings</span>
                 </div>
+                <button class="btn-icon rp" onclick="refreshWebGram()">
+                    <div class="c-ripple"></div>
+                    <span class="tgico button-icon"></span>
+                </button>
             </div>
             
-            <div style="padding: 20px; max-height: 400px; overflow-y: auto;">
-                <!-- Quick Actions -->
-                <div style="margin-bottom: 20px;">
-                    <h3 style="margin: 0 0 15px 0; color: #333;">🚀 Quick Actions</h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <button onclick="showQuickAddModal()" style="
-                            padding: 12px;
-                            background: #0088cc;
-                            color: white;
-                            border: none;
-                            border-radius: 8px;
-                            cursor: pointer;
-                            font-size: 14px;
-                        ">➕ Quick Add</button>
-                        <button onclick="clearAllSettings()" style="
-                            padding: 12px;
-                            background: #ff4444;
-                            color: white;
-                            border: none;
-                            border-radius: 8px;
-                            cursor: pointer;
-                            font-size: 14px;
-                        ">🗑️ Clear All</button>
+            <div class="sidebar-content">
+                <div class="scrollable scrollable-y no-parallax">
+                    <!-- Статистика -->
+                    <div class="sidebar-left-section-container">
+                        <div class="sidebar-left-section no-delimiter">
+                            <div class="sidebar-left-section-content">
+                                <div class="profile-buttons">
+                                    <div class="row no-subtitle row-with-icon row-with-padding">
+                                        <div class="row-row row-title-row">
+                                            <div class="row-title">Verified Users</div>
+                                            <div class="row-title row-title-right row-title-right-secondary">${verifiedCount}</div>
+                                        </div>
+                                        <span class="tgico row-icon"></span>
+                                    </div>
+                                    <div class="row no-subtitle row-with-icon row-with-padding">
+                                        <div class="row-row row-title-row">
+                                            <div class="row-title">Emoji Status</div>
+                                            <div class="row-title row-title-right row-title-right-secondary">${emojiCount}</div>
+                                        </div>
+                                        <span class="tgico row-icon"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Быстрое добавление -->
+                    <div class="sidebar-left-section-container">
+                        <div class="sidebar-left-section">
+                            <hr>
+                            <div class="sidebar-left-section-content">
+                                <div class="sidebar-left-h2 sidebar-left-section-name">
+                                    <span>Quick Add</span>
+                                </div>
+                                <div class="profile-buttons">
+                                    <div class="row no-subtitle row-with-icon row-with-padding row-clickable hover-effect rp" onclick="showAddModal('verified')">
+                                        <div class="c-ripple"></div>
+                                        <div class="row-title">Add Verified User</div>
+                                        <span class="tgico row-icon"></span>
+                                    </div>
+                                    <div class="row no-subtitle row-with-icon row-with-padding row-clickable hover-effect rp" onclick="showAddModal('emoji')">
+                                        <div class="c-ripple"></div>
+                                        <div class="row-title">Add Emoji Status</div>
+                                        <span class="tgico row-icon"></span>
+                                    </div>
+                                    <div class="row no-subtitle row-with-icon row-with-padding row-clickable hover-effect rp" onclick="showAddModal('both')">
+                                        <div class="c-ripple"></div>
+                                        <div class="row-title">Add Both</div>
+                                        <span class="tgico row-icon"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Управление -->
+                    <div class="sidebar-left-section-container">
+                        <div class="sidebar-left-section">
+                            <hr>
+                            <div class="sidebar-left-section-content">
+                                <div class="sidebar-left-h2 sidebar-left-section-name">
+                                    <span>Management</span>
+                                </div>
+                                <div class="profile-buttons">
+                                    <div class="row no-subtitle row-with-icon row-with-padding row-clickable hover-effect rp" onclick="showUsersList('verified')">
+                                        <div class="c-ripple"></div>
+                                        <div class="row-row row-title-row">
+                                            <div class="row-title">Manage Verified Users</div>
+                                            <div class="row-title row-title-right row-title-right-secondary">${verifiedCount}</div>
+                                        </div>
+                                        <span class="tgico row-icon"></span>
+                                    </div>
+                                    <div class="row no-subtitle row-with-icon row-with-padding row-clickable hover-effect rp" onclick="showUsersList('emoji')">
+                                        <div class="c-ripple"></div>
+                                        <div class="row-row row-title-row">
+                                            <div class="row-title">Manage Emoji Status</div>
+                                            <div class="row-title row-title-right row-title-right-secondary">${emojiCount}</div>
+                                        </div>
+                                        <span class="tgico row-icon"></span>
+                                    </div>
+                                    <div class="row no-subtitle row-with-icon row-with-padding row-clickable hover-effect rp" onclick="clearAllSettings()">
+                                        <div class="c-ripple"></div>
+                                        <div class="row-title" style="color: #ff4444;">Clear All Settings</div>
+                                        <span class="tgico row-icon" style="color: #ff4444;"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Инструкция -->
+                    <div class="sidebar-left-section-container">
+                        <div class="sidebar-left-section">
+                            <hr>
+                            <div class="sidebar-left-section-content">
+                                <div class="sidebar-left-h2 sidebar-left-section-name">
+                                    <span>How to Use</span>
+                                </div>
+                                <div style="padding: 0 16px 16px; color: #666; font-size: 14px; line-height: 1.4;">
+                                    <p>1. To add verification/emoji, you need User ID</p>
+                                    <p>2. User ID can be found in peer-title data attributes</p>
+                                    <p>3. Emoji status uses document IDs from Telegram</p>
+                                    <p>4. Changes apply immediately to all visible names</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                
-                <!-- Verified Users -->
-                <div style="margin-bottom: 20px;">
-                    <h3 style="margin: 0 0 15px 0; color: #333;">✅ Verified Users</h3>
-                    <div id="verified-users-list" style="
-                        max-height: 120px;
-                        overflow-y: auto;
-                        border: 1px solid #eee;
-                        border-radius: 8px;
-                        padding: 10px;
-                    ">
-                        ${getVerifiedUsersList()}
-                    </div>
-                    <button onclick="showVerifiedModal()" style="
-                        width: 100%;
-                        padding: 10px;
-                        margin-top: 10px;
-                        background: #00a884;
-                        color: white;
-                        border: none;
-                        border-radius: 8px;
-                        cursor: pointer;
-                    ">Manage Verified</button>
-                </div>
-                
-                <!-- Emoji Status -->
-                <div style="margin-bottom: 20px;">
-                    <h3 style="margin: 0 0 15px 0; color: #333;">🎨 Emoji Status</h3>
-                    <div id="emoji-users-list" style="
-                        max-height: 120px;
-                        overflow-y: auto;
-                        border: 1px solid #eee;
-                        border-radius: 8px;
-                        padding: 10px;
-                    ">
-                        ${getEmojiUsersList()}
-                    </div>
-                    <button onclick="showEmojiModal()" style="
-                        width: 100%;
-                        padding: 10px;
-                        margin-top: 10px;
-                        background: #ff6b6b;
-                        color: white;
-                        border: none;
-                        border-radius: 8px;
-                        cursor: pointer;
-                    ">Manage Emoji</button>
-                </div>
-                
-                <!-- Add by ID -->
-                <div>
-                    <h3 style="margin: 0 0 15px 0; color: #333;">🔢 Add by User ID</h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <input type="number" id="webgram-user-id" placeholder="User ID" style="
-                            padding: 10px;
-                            border: 1px solid #ddd;
-                            border-radius: 8px;
-                            grid-column: 1 / -1;
-                        ">
-                        <button onclick="quickAddVerification()" style="
-                            padding: 10px;
-                            background: #0088cc;
-                            color: white;
-                            border: none;
-                            border-radius: 8px;
-                            cursor: pointer;
-                        ">Add ✅</button>
-                        <button onclick="quickAddRandomEmoji()" style="
-                            padding: 10px;
-                            background: #ff6b6b;
-                            color: white;
-                            border: none;
-                            border-radius: 8px;
-                            cursor: pointer;
-                        ">Add 🎨</button>
-                    </div>
-                </div>
-            </div>
-            
-            <div style="
-                padding: 15px;
-                background: #f8f9fa;
-                text-align: center;
-                border-top: 1px solid #eee;
-            ">
-                <button onclick="closeWebGramPanel()" style="
-                    padding: 10px 20px;
-                    background: #666;
-                    color: white;
-                    border: none;
-                    border-radius: 8px;
-                    cursor: pointer;
-                ">Close</button>
             </div>
         </div>
-        <div class="webgram-overlay" style="
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 9999;
-        " onclick="closeWebGramPanel()"></div>
     `;
     
-    const panel = document.createElement('div');
-    panel.innerHTML = panelHTML;
-    document.body.appendChild(panel);
-}
-
-// Функции для списков пользователей
-function getVerifiedUsersList() {
-    const verifiedUsers = Object.entries(usersConfig)
-        .filter(([_, config]) => config.verified)
-        .map(([userId]) => userId);
+    const settingsContainer = document.createElement('div');
+    settingsContainer.innerHTML = settingsHTML;
     
-    if (verifiedUsers.length === 0) {
-        return '<div style="text-align: center; color: #666; padding: 20px;">No verified users</div>';
-    }
-    
-    return verifiedUsers.slice(0, 3).map(userId => `
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #f0f0f0;">
-            <span>${userId}</span>
-            <button onclick="removeVerification(${userId}); updateWebGramPanel();" style="
-                background: #ff4444;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                padding: 2px 8px;
-                font-size: 12px;
-                cursor: pointer;
-            ">Remove</button>
-        </div>
-    `).join('') + (verifiedUsers.length > 3 ? 
-        `<div style="text-align: center; color: #666; padding: 5px;">...and ${verifiedUsers.length - 3} more</div>` : ''
-    );
-}
-
-function getEmojiUsersList() {
-    const emojiUsers = Object.entries(usersConfig)
-        .filter(([_, config]) => config.emojiStatus)
-        .map(([userId, config]) => ({ userId, emojiStatus: config.emojiStatus }));
-    
-    if (emojiUsers.length === 0) {
-        return '<div style="text-align: center; color: #666; padding: 20px;">No emoji status</div>';
-    }
-    
-    return emojiUsers.slice(0, 3).map(({ userId, emojiStatus }) => `
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #f0f0f0;">
-            <div>
-                <div>${userId}</div>
-                <div style="font-size: 10px; color: #666;">${emojiStatus}</div>
-            </div>
-            <button onclick="removeEmojiStatus(${userId}); updateWebGramPanel();" style="
-                background: #ff4444;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                padding: 2px 8px;
-                font-size: 12px;
-                cursor: pointer;
-            ">Remove</button>
-        </div>
-    `).join('') + (emojiUsers.length > 3 ? 
-        `<div style="text-align: center; color: #666; padding: 5px;">...and ${emojiUsers.length - 3} more</div>` : ''
-    );
-}
-
-// Функция обновления панели
-function updateWebGramPanel() {
-    const panel = document.querySelector('.webgram-panel');
-    if (panel) {
-        closeWebGramPanel();
-        setTimeout(showWebGramPanel, 100);
+    // Добавляем в основной контейнер
+    const mainContainer = document.querySelector('#column-left .sidebar-slider.tabs-container');
+    if (mainContainer) {
+        mainContainer.appendChild(settingsContainer);
     }
 }
 
-// Функция закрытия панели
-function closeWebGramPanel() {
-    const panel = document.querySelector('.webgram-panel');
-    const overlay = document.querySelector('.webgram-overlay');
-    
-    if (panel) document.body.removeChild(panel);
-    if (overlay) document.body.removeChild(overlay);
+// Функция закрытия настроек WebGram
+function closeWebGramSettings() {
+    const settings = document.querySelector('.webgram-settings');
+    if (settings) {
+        settings.remove();
+    }
 }
 
-// Модальные окна
-function showQuickAddModal() {
+// Функция обновления настроек
+function refreshWebGram() {
+    closeWebGramSettings();
+    setTimeout(showWebGramSettings, 100);
+}
+
+// Модальное окно для добавления
+function showAddModal(type) {
+    const title = type === 'verified' ? 'Add Verified User' : 
+                 type === 'emoji' ? 'Add Emoji Status' : 'Add Both';
+    
     const modalHTML = `
-        <div style="padding: 20px;">
-            <h3 style="margin: 0 0 15px 0;">🚀 Quick Add</h3>
-            
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: bold;">User ID:</label>
-                <input type="number" id="modal-user-id" placeholder="Enter User ID" style="
-                    width: 100%;
-                    padding: 10px;
-                    border: 1px solid #ddd;
-                    border-radius: 8px;
-                    margin-bottom: 10px;
-                ">
-            </div>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <button onclick="modalAddVerification()" style="
-                    padding: 12px;
-                    background: #0088cc;
-                    color: white;
-                    border: none;
-                    border-radius: 8px;
-                    cursor: pointer;
-                ">Add ✅ Only</button>
-                
-                <button onclick="modalAddEmoji()" style="
-                    padding: 12px;
-                    background: #ff6b6b;
-                    color: white;
-                    border: none;
-                    border-radius: 8px;
-                    cursor: pointer;
-                ">Add 🎨 Only</button>
-                
-                <button onclick="modalAddBoth()" style="
-                    padding: 12px;
-                    background: #00a884;
-                    color: white;
-                    border: none;
-                    border-radius: 8px;
-                    cursor: pointer;
-                    grid-column: 1 / -1;
-                ">Add ✅ + 🎨</button>
-            </div>
-            
-            <button onclick="closeModal()" style="
-                width: 100%;
-                padding: 10px;
-                margin-top: 15px;
-                background: #666;
-                color: white;
-                border: none;
-                border-radius: 8px;
-                cursor: pointer;
-            ">Cancel</button>
-        </div>
-    `;
-    
-    showCustomModal(modalHTML);
-}
-
-function showVerifiedModal() {
-    const verifiedUsers = Object.entries(usersConfig)
-        .filter(([_, config]) => config.verified)
-        .map(([userId]) => userId);
-    
-    let modalHTML = `
-        <div style="padding: 20px;">
-            <h3 style="margin: 0 0 15px 0;">✅ Verified Users (${verifiedUsers.length})</h3>
-            <div style="max-height: 200px; overflow-y: auto; margin-bottom: 15px;">
-    `;
-    
-    if (verifiedUsers.length === 0) {
-        modalHTML += '<div style="text-align: center; color: #666; padding: 40px;">No verified users</div>';
-    } else {
-        modalHTML += verifiedUsers.map(userId => `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee;">
-                <span>User ID: ${userId}</span>
-                <button onclick="removeVerification(${userId}); closeModal(); showVerifiedModal();" style="
-                    background: #ff4444;
-                    color: white;
-                    border: none;
-                    border-radius: 4px;
-                    padding: 5px 10px;
-                    cursor: pointer;
-                ">Remove</button>
-            </div>
-        `).join('');
-    }
-    
-    modalHTML += `
-            </div>
-            <button onclick="closeModal()" style="
-                width: 100%;
-                padding: 10px;
-                background: #666;
-                color: white;
-                border: none;
-                border-radius: 8px;
-                cursor: pointer;
-            ">Close</button>
-        </div>
-    `;
-    
-    showCustomModal(modalHTML);
-}
-
-function showEmojiModal() {
-    const emojiUsers = Object.entries(usersConfig)
-        .filter(([_, config]) => config.emojiStatus)
-        .map(([userId, config]) => ({ userId, emojiStatus: config.emojiStatus }));
-    
-    let modalHTML = `
-        <div style="padding: 20px;">
-            <h3 style="margin: 0 0 15px 0;">🎨 Emoji Status (${emojiUsers.length})</h3>
-            <div style="max-height: 200px; overflow-y: auto; margin-bottom: 15px;">
-    `;
-    
-    if (emojiUsers.length === 0) {
-        modalHTML += '<div style="text-align: center; color: #666; padding: 40px;">No emoji status</div>';
-    } else {
-        modalHTML += emojiUsers.map(({ userId, emojiStatus }) => `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee;">
-                <div>
-                    <div>User ID: ${userId}</div>
-                    <div style="font-size: 12px; color: #666;">Doc: ${emojiStatus}</div>
+        <div class="backdrop active" style="z-index: 10000;">
+            <div class="modal active" style="width: 320px;">
+                <div class="modal-header">
+                    <div class="modal-title">${title}</div>
+                    <button class="btn-icon btn-circle btn-corner z-depth-1 modal-close-button" onclick="closeModal()">
+                        <span class="tgico button-icon"></span>
+                    </button>
                 </div>
-                <button onclick="removeEmojiStatus(${userId}); closeModal(); showEmojiModal();" style="
-                    background: #ff4444;
-                    color: white;
-                    border: none;
-                    border-radius: 4px;
-                    padding: 5px 10px;
-                    cursor: pointer;
-                ">Remove</button>
+                <div class="modal-content">
+                    <div class="input-group">
+                        <input type="number" id="modal-user-id" class="input-field" placeholder="User ID" style="margin-bottom: 12px;">
+                        ${type !== 'verified' ? `
+                        <input type="text" id="modal-doc-id" class="input-field" placeholder="Document ID" value="emoji_${Date.now()}">
+                        <div style="font-size: 12px; color: #666; margin-top: 8px;">
+                            Use any text as Document ID
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn-primary" onclick="modalAdd('${type}')">Add</button>
+                    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+                </div>
             </div>
-        `).join('');
-    }
-    
-    modalHTML += `
-            </div>
-            <button onclick="closeModal()" style="
-                width: 100%;
-                padding: 10px;
-                background: #666;
-                color: white;
-                border: none;
-                border-radius: 8px;
-                cursor: pointer;
-            ">Close</button>
         </div>
     `;
     
-    showCustomModal(modalHTML);
-}
-
-// Вспомогательные функции для модальных окон
-function showCustomModal(content) {
+    // Закрываем существующие модалки
     closeModal();
     
-    const modal = document.createElement('div');
-    modal.style.cssText = `
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        z-index: 10002;
-        min-width: 300px;
-        max-width: 90vw;
-    `;
-    modal.innerHTML = content;
-    
-    const overlay = document.createElement('div');
-    overlay.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.5);
-        z-index: 10001;
-    `;
-    overlay.onclick = closeModal;
-    
-    modal.overlay = overlay;
-    
-    document.body.appendChild(overlay);
-    document.body.appendChild(modal);
+    const modalContainer = document.createElement('div');
+    modalContainer.innerHTML = modalHTML;
+    document.body.appendChild(modalContainer);
 }
 
-function closeModal() {
-    const modals = document.querySelectorAll('div');
-    modals.forEach(modal => {
-        if (modal.style.zIndex === '10002') {
-            document.body.removeChild(modal);
-        }
-    });
-    const overlays = document.querySelectorAll('div');
-    overlays.forEach(overlay => {
-        if (overlay.style.zIndex === '10001') {
-            document.body.removeChild(overlay);
-        }
-    });
+// Функция добавления из модалки
+function modalAdd(type) {
+    const userIdInput = document.getElementById('modal-user-id');
+    const docIdInput = document.getElementById('modal-doc-id');
+    
+    const userId = parseInt(userIdInput.value);
+    
+    if (!userId || isNaN(userId)) {
+        alert('Please enter valid User ID');
+        return;
+    }
+    
+    if (type === 'verified') {
+        addVerification(userId);
+    } else if (type === 'emoji') {
+        const docId = docIdInput?.value || `emoji_${Date.now()}`;
+        setEmojiStatus(userId, docId);
+    } else if (type === 'both') {
+        const docId = docIdInput?.value || `emoji_${Date.now()}`;
+        addVerification(userId);
+        setEmojiStatus(userId, docId);
+    }
+    
+    closeModal();
+    refreshWebGram();
 }
 
-// Глобальные функции для кнопок
-window.quickAddVerification = function() {
-    const input = document.getElementById('webgram-user-id');
-    const userId = parseInt(input.value);
-    if (userId && !isNaN(userId)) {
-        addVerification(userId);
-        input.value = '';
-        updateWebGramPanel();
+// Показать список пользователей
+function showUsersList(type) {
+    const users = Object.entries(usersConfig)
+        .filter(([_, config]) => type === 'verified' ? config.verified : config.emojiStatus)
+        .map(([userId, config]) => ({ userId, config }));
+    
+    const title = type === 'verified' ? 'Verified Users' : 'Emoji Status Users';
+    
+    let modalHTML = `
+        <div class="backdrop active" style="z-index: 10000;">
+            <div class="modal active" style="width: 400px; max-height: 500px;">
+                <div class="modal-header">
+                    <div class="modal-title">${title} (${users.length})</div>
+                    <button class="btn-icon btn-circle btn-corner z-depth-1 modal-close-button" onclick="closeModal()">
+                        <span class="tgico button-icon"></span>
+                    </button>
+                </div>
+                <div class="modal-content" style="max-height: 350px; overflow-y: auto;">
+    `;
+    
+    if (users.length === 0) {
+        modalHTML += `
+            <div style="text-align: center; padding: 40px; color: #666;">
+                No ${type === 'verified' ? 'verified users' : 'emoji status users'}
+            </div>
+        `;
     } else {
-        alert('Please enter a valid User ID');
+        users.forEach(({ userId, config }) => {
+            modalHTML += `
+                <div class="row no-subtitle row-with-padding" style="border-bottom: 1px solid #eee;">
+                    <div class="row-row row-title-row">
+                        <div class="row-title">User ID: ${userId}</div>
+                        ${type === 'emoji' ? `<div class="row-subtitle">Doc: ${config.emojiStatus}</div>` : ''}
+                    </div>
+                    <button class="btn-secondary btn-small" onclick="removeUserSetting(${userId}, '${type}')" style="margin-top: 8px;">
+                        Remove
+                    </button>
+                </div>
+            `;
+        });
     }
-};
+    
+    modalHTML += `
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn-secondary" onclick="closeModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    closeModal();
+    
+    const modalContainer = document.createElement('div');
+    modalContainer.innerHTML = modalHTML;
+    document.body.appendChild(modalContainer);
+}
 
-window.quickAddRandomEmoji = function() {
-    const input = document.getElementById('webgram-user-id');
-    const userId = parseInt(input.value);
-    if (userId && !isNaN(userId)) {
-        const emojis = ['star_123', 'heart_456', 'fire_789', 'rocket_999', 'crown_111'];
-        const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-        setEmojiStatus(userId, randomEmoji);
-        input.value = '';
-        updateWebGramPanel();
+// Удалить настройку пользователя
+function removeUserSetting(userId, type) {
+    if (type === 'verified') {
+        removeVerification(userId);
     } else {
-        alert('Please enter a valid User ID');
+        removeEmojiStatus(userId);
     }
-};
+    closeModal();
+    setTimeout(() => showUsersList(type), 100);
+}
 
-window.modalAddVerification = function() {
-    const input = document.getElementById('modal-user-id');
-    const userId = parseInt(input.value);
-    if (userId && !isNaN(userId)) {
-        addVerification(userId);
-        closeModal();
-        updateWebGramPanel();
-    } else {
-        alert('Please enter a valid User ID');
-    }
-};
-
-window.modalAddEmoji = function() {
-    const input = document.getElementById('modal-user-id');
-    const userId = parseInt(input.value);
-    if (userId && !isNaN(userId)) {
-        const emojis = ['star_123', 'heart_456', 'fire_789', 'rocket_999', 'crown_111'];
-        const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-        setEmojiStatus(userId, randomEmoji);
-        closeModal();
-        updateWebGramPanel();
-    } else {
-        alert('Please enter a valid User ID');
-    }
-};
-
-window.modalAddBoth = function() {
-    const input = document.getElementById('modal-user-id');
-    const userId = parseInt(input.value);
-    if (userId && !isNaN(userId)) {
-        addVerification(userId);
-        const emojis = ['star_123', 'heart_456', 'fire_789', 'rocket_999', 'crown_111'];
-        const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-        setEmojiStatus(userId, randomEmoji);
-        closeModal();
-        updateWebGramPanel();
-    } else {
-        alert('Please enter a valid User ID');
-    }
-};
-
-window.clearAllSettings = function() {
+// Очистить все настройки
+function clearAllSettings() {
     if (confirm('Are you sure you want to clear ALL WebGram settings? This cannot be undone.')) {
         Object.keys(usersConfig).forEach(userId => {
             delete usersConfig[userId];
         });
         addVerificationAndStatus();
-        updateWebGramPanel();
-        alert('All settings cleared!');
+        refreshWebGram();
     }
-};
+}
 
-// Инициализация
+// Закрыть модальное окно
+function closeModal() {
+    const backdrops = document.querySelectorAll('.backdrop.active');
+    backdrops.forEach(backdrop => {
+        backdrop.remove();
+    });
+}
+
+// Наблюдатель за изменениями DOM
 function init() {
     addVerificationAndStatus();
-    createWebGramButton();
     
     const observer = new MutationObserver(() => {
         addVerificationAndStatus();
-        createWebGramButton();
+        
+        // Добавляем кнопку в меню когда оно появляется
+        if (document.querySelector('.btn-menu.bottom-right.active')) {
+            addWebGramToMenu();
+        }
     });
     
     observer.observe(document.body, {
         childList: true,
         subtree: true,
-        attributes: true
+        attributes: true,
+        attributeFilter: ['class', 'data-peer-id']
     });
+    
+    // Периодическая проверка
+    setInterval(() => {
+        addVerificationAndStatus();
+    }, 1000);
     
     console.log('🎯 WebGram initialized');
 }
 
+// Глобальные функции
+window.closeWebGramSettings = closeWebGramSettings;
+window.refreshWebGram = refreshWebGram;
+window.showAddModal = showAddModal;
+window.modalAdd = modalAdd;
+window.showUsersList = showUsersList;
+window.removeUserSetting = removeUserSetting;
+window.clearAllSettings = clearAllSettings;
+window.closeModal = closeModal;
+
 // Автозапуск
 init();
-addVerification(7899534962);
 
 // Добавляем тестовые данные
 setTimeout(() => {
+    addVerification(7899534962);
     addVerification(123456789);
-    setEmojiStatus(123456789, 'star_123');
+    setEmojiStatus(123456789, 'star_emoji_123');
     addVerification(987654321);
-    setEmojiStatus(987654321, 'heart_456');
+    setEmojiStatus(987654321, 'heart_emoji_456');
 }, 1000);
