@@ -8,6 +8,7 @@ const selectors = [
 ];
 
 function addVerificationAndStatus() {
+    update_settings()
     selectors.forEach(selector => {
         const elements = document.querySelectorAll(selector);
         elements.forEach(element => {
