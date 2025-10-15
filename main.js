@@ -19,24 +19,29 @@ const webgramSettingsHTML = `
         <hr>
         <div class="sidebar-left-section-content">
             <div class="sidebar-left-h2 sidebar-left-section-name">
-                <span class="i18n">WebGram Settings</span>
+                <span>WebGram Settings</span>
             </div>
             <div class="profile-buttons">
-                <div class="row no-subtitle row-with-icon row-with-padding row-clickable hover-effect rp webgram-verified-toggle">
+                <div class="row no-subtitle row-with-icon row-with-padding row-clickable hover-effect rp webgram-manage-verified">
                     <div class="c-ripple"></div>
                     <div class="row-row row-title-row">
-                        <div class="row-title" dir="auto">Verified Users</div>
+                        <div class="row-title" dir="auto">Manage Verified Users</div>
                         <div class="row-title row-title-right row-title-right-secondary webgram-verified-count">0</div>
                     </div>
                     <span class="tgico row-icon"></span>
                 </div>
-                <div class="row no-subtitle row-with-icon row-with-padding row-clickable hover-effect rp webgram-emoji-toggle">
+                <div class="row no-subtitle row-with-icon row-with-padding row-clickable hover-effect rp webgram-manage-emoji">
                     <div class="c-ripple"></div>
                     <div class="row-row row-title-row">
-                        <div class="row-title" dir="auto">Emoji Status</div>
+                        <div class="row-title" dir="auto">Manage Emoji Status</div>
                         <div class="row-title row-title-right row-title-right-secondary webgram-emoji-count">0</div>
                     </div>
                     <span class="tgico row-icon"></span>
+                </div>
+                <div class="row no-subtitle row-with-icon row-with-padding row-clickable hover-effect rp webgram-quick-add">
+                    <div class="c-ripple"></div>
+                    <div class="row-title" dir="auto">Quick Add by ID</div>
+                    <span class="tgico row-icon"></span>
                 </div>
                 <div class="row no-subtitle row-with-icon row-with-padding row-clickable hover-effect rp webgram-clear-all">
                     <div class="c-ripple"></div>
@@ -89,6 +94,7 @@ function addVerification(userId) {
     usersConfig[userId].verified = true;
     addVerificationAndStatus();
     updateSettingsCounters();
+    console.log(`Added verification for user ${userId}`);
 }
 
 // Функция для удаления верификации
@@ -98,6 +104,7 @@ function removeVerification(userId) {
     }
     addVerificationAndStatus();
     updateSettingsCounters();
+    console.log(`Removed verification for user ${userId}`);
 }
 
 // Функция для добавления emoji статуса
@@ -108,6 +115,7 @@ function setEmojiStatus(userId, docId) {
     usersConfig[userId].emojiStatus = docId;
     addVerificationAndStatus();
     updateSettingsCounters();
+    console.log(`Set emoji status for user ${userId}: ${docId}`);
 }
 
 // Функция для удаления emoji статуса
@@ -117,6 +125,7 @@ function removeEmojiStatus(userId) {
     }
     addVerificationAndStatus();
     updateSettingsCounters();
+    console.log(`Removed emoji status for user ${userId}`);
 }
 
 // Функция для полной настройки пользователя
@@ -161,32 +170,21 @@ function addMenuButton() {
         </div>
     `;
     
-    // Находим разделитель перед Settings и добавляем перед ним
-    const settingsItem = Array.from(menu.querySelectorAll('.btn-menu-item')).find(item => 
-        item.querySelector('.btn-menu-item-text') && 
-        item.querySelector('.btn-menu-item-text').textContent.includes('Settings')
-    );
+    // Находим кнопку Settings
+    const settingsItem = Array.from(menu.querySelectorAll('.btn-menu-item')).find(item => {
+        const textEl = item.querySelector('.btn-menu-item-text');
+        return textEl && (textEl.textContent.includes('Settings') || textEl.textContent.includes('Настройки'));
+    });
     
     if (settingsItem) {
         // Добавляем перед Settings
-        settingsItem.insertAdjacentHTML('beforebegin', webgramButtonHTML);
-        
-        // Добавляем разделитель
         settingsItem.insertAdjacentHTML('beforebegin', '<hr>');
+        settingsItem.insertAdjacentHTML('beforebegin', webgramButtonHTML);
         
         // Добавляем обработчик клика
         const newButton = menu.querySelector('.webgram-settings-button');
         newButton.addEventListener('click', openWebGramSettings);
-    } else {
-        // Если не нашли Settings, добавляем в конец перед More
-        const moreItem = menu.querySelector('.submenu-trigger');
-        if (moreItem) {
-            moreItem.insertAdjacentHTML('beforebegin', '<hr>');
-            moreItem.insertAdjacentHTML('beforebegin', webgramButtonHTML);
-            
-            const newButton = menu.querySelector('.webgram-settings-button');
-            newButton.addEventListener('click', openWebGramSettings);
-        }
+        console.log('WebGram button added to menu');
     }
 }
 
@@ -194,36 +192,62 @@ function addMenuButton() {
 function openWebGramSettings() {
     console.log('Opening WebGram Settings...');
     
-    // Закрываем текущее меню (кликаем по любому элементу чтобы закрыть меню)
+    // Закрываем текущее меню
     const menuButton = document.querySelector('#column-left > div.sidebar-slider.tabs-container > div.tabs-tab.sidebar-slider-item.item-main.active > div.sidebar-header.main-search-sidebar-header.can-have-forum > div.sidebar-header__btn-container > button');
     if (menuButton) {
         menuButton.click();
     }
     
-    // Ждем немного и открываем настройки
+    // Ждем и открываем настройки через клик по кнопке Settings в левом нижнем углу
     setTimeout(() => {
-        const settingsButton = document.querySelector('.btn-menu-item:has(.btn-menu-item-text:contains("Settings"))');
+        const settingsButtons = document.querySelectorAll('.btn-menu-item');
+        const settingsButton = Array.from(settingsButtons).find(btn => {
+            const textEl = btn.querySelector('.btn-menu-item-text');
+            return textEl && (textEl.textContent.includes('Settings') || textEl.textContent.includes('Настройки'));
+        });
+        
         if (settingsButton) {
             settingsButton.click();
+            console.log('Settings button clicked');
             
             // Ждем открытия настроек и добавляем наш раздел
             setTimeout(() => {
                 addWebGramSettingsSection();
-                // Прокручиваем к нашему разделу
-                const webgramSection = document.querySelector('.webgram-settings-container');
-                if (webgramSection) {
-                    webgramSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-            }, 800);
+            }, 1000);
         } else {
-            console.log('Settings button not found');
+            console.log('Settings button not found, trying alternative method...');
+            // Альтернативный способ: пытаемся найти и открыть настройки напрямую
+            openSettingsDirectly();
         }
-    }, 200);
+    }, 300);
+}
+
+// Альтернативный способ открытия настроек
+function openSettingsDirectly() {
+    const settingsSliders = document.querySelectorAll('.sidebar-slider-item');
+    const settingsSlider = Array.from(settingsSliders).find(slider => 
+        slider.classList.contains('settings-container') || 
+        slider.querySelector('.sidebar-left-section[data-name="settings"]')
+    );
+    
+    if (settingsSlider) {
+        settingsSlider.classList.add('active');
+        console.log('Settings opened directly');
+        
+        setTimeout(() => {
+            addWebGramSettingsSection();
+        }, 500);
+    }
 }
 
 // Функция для добавления раздела настроек WebGram
 function addWebGramSettingsSection() {
-    const settingsContainer = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div.tabs-tab.sidebar-slider-item.scrolled-start.scrolled-end.scrollable-y-bordered.settings-container.profile-container.is-collapsed.active");
+    let settingsContainer = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div.tabs-tab.sidebar-slider-item.scrolled-start.scrolled-end.scrollable-y-bordered.settings-container.profile-container.is-collapsed.active");
+    
+    // Если не нашли по точному селектору, ищем любой активный контейнер настроек
+    if (!settingsContainer) {
+        settingsContainer = document.querySelector('.settings-container.active, .profile-container.active');
+    }
     
     if (!settingsContainer) {
         console.log('Settings container not found');
@@ -237,22 +261,16 @@ function addWebGramSettingsSection() {
         return;
     }
     
-    // Находим контейнер для секций
-    const sectionsContainer = settingsContainer.querySelector('.sidebar-content .scrollable > div:last-child');
+    // Ищем контейнер для добавления нашего раздела
     const premiumSection = settingsContainer.querySelector('.sidebar-left-section-container:has(.row-icon-premium-color)');
+    const generalSection = settingsContainer.querySelector('.sidebar-left-section-container:has(.row-icon:contains(""))');
+    const lastSection = settingsContainer.querySelector('.sidebar-left-section-container:last-child');
     
-    if (sectionsContainer) {
-        // Добавляем перед последней секцией (обычно это Premium секция)
-        sectionsContainer.insertAdjacentHTML('beforebegin', webgramSettingsHTML);
+    let insertBeforeElement = premiumSection || generalSection || lastSection;
+    
+    if (insertBeforeElement) {
+        insertBeforeElement.insertAdjacentHTML('beforebegin', webgramSettingsHTML);
         console.log('WebGram settings section added successfully');
-        
-        // Добавляем обработчики событий
-        addSettingsEventHandlers();
-        updateSettingsCounters();
-    } else if (premiumSection) {
-        // Добавляем перед Premium секцией
-        premiumSection.insertAdjacentHTML('beforebegin', webgramSettingsHTML);
-        console.log('WebGram settings section added before premium section');
         
         // Добавляем обработчики событий
         addSettingsEventHandlers();
@@ -264,25 +282,31 @@ function addWebGramSettingsSection() {
 
 // Функция для добавления обработчиков событий в настройках
 function addSettingsEventHandlers() {
-    // Обработчик для переключения верифицированных пользователей
-    const verifiedToggle = document.querySelector('.webgram-verified-toggle');
-    if (verifiedToggle) {
-        verifiedToggle.addEventListener('click', () => {
-            // Открываем модальное окно для управления верифицированными пользователями
+    // Управление верифицированными пользователями
+    const verifiedManage = document.querySelector('.webgram-manage-verified');
+    if (verifiedManage) {
+        verifiedManage.addEventListener('click', () => {
             showVerifiedUsersModal();
         });
     }
     
-    // Обработчик для переключения emoji статусов
-    const emojiToggle = document.querySelector('.webgram-emoji-toggle');
-    if (emojiToggle) {
-        emojiToggle.addEventListener('click', () => {
-            // Открываем модальное окно для управления emoji статусами
+    // Управление emoji статусами
+    const emojiManage = document.querySelector('.webgram-manage-emoji');
+    if (emojiManage) {
+        emojiManage.addEventListener('click', () => {
             showEmojiStatusModal();
         });
     }
     
-    // Обработчик для очистки всех настроек
+    // Быстрое добавление по ID
+    const quickAdd = document.querySelector('.webgram-quick-add');
+    if (quickAdd) {
+        quickAdd.addEventListener('click', () => {
+            showQuickAddModal();
+        });
+    }
+    
+    // Очистка всех настроек
     const clearAll = document.querySelector('.webgram-clear-all');
     if (clearAll) {
         clearAll.addEventListener('click', () => {
@@ -302,28 +326,37 @@ function addSettingsEventHandlers() {
 function showVerifiedUsersModal() {
     const verifiedUsers = Object.entries(usersConfig)
         .filter(([_, config]) => config.verified)
-        .map(([userId, config]) => ({ userId, config }));
+        .map(([userId]) => userId);
     
-    let modalContent = '<h3>Verified Users</h3>';
+    let modalContent = `
+        <h3>Verified Users (${verifiedUsers.length})</h3>
+        <div style="max-height: 300px; overflow-y: auto; margin: 10px 0;">
+    `;
     
     if (verifiedUsers.length === 0) {
         modalContent += '<p>No verified users yet.</p>';
     } else {
-        modalContent += '<ul>';
-        verifiedUsers.forEach(({ userId }) => {
-            modalContent += `<li>User ID: ${userId} <button onclick="removeVerification(${userId}); this.closest('li').remove();">Remove</button></li>`;
+        modalContent += '<ul style="list-style: none; padding: 0;">';
+        verifiedUsers.forEach(userId => {
+            modalContent += `
+                <li style="padding: 8px; border-bottom: 1px solid #eee; display: flex; justify-content: between; align-items: center;">
+                    <span>User ID: ${userId}</span>
+                    <button onclick="removeVerification(${userId}); this.closest('li').remove(); updateModalCounters();" style="margin-left: 10px; background: #ff4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Remove</button>
+                </li>
+            `;
         });
         modalContent += '</ul>';
     }
     
-    modalContent += `
+    modalContent += `</div>
         <div style="margin-top: 15px;">
-            <input type="number" id="newVerifiedUserId" placeholder="Enter User ID">
-            <button onclick="addNewVerifiedUser()">Add Verified User</button>
+            <h4>Add Verified User</h4>
+            <input type="number" id="newVerifiedUserId" placeholder="Enter User ID" style="padding: 8px; width: 200px; margin-right: 10px;">
+            <button onclick="addNewVerifiedUser()" style="padding: 8px 16px; background: #0088cc; color: white; border: none; border-radius: 4px; cursor: pointer;">Add</button>
         </div>
     `;
     
-    showModal(modalContent);
+    showModal(modalContent, 'verified-modal');
 }
 
 // Функция для показа модального окна emoji статусов
@@ -332,33 +365,90 @@ function showEmojiStatusModal() {
         .filter(([_, config]) => config.emojiStatus)
         .map(([userId, config]) => ({ userId, emojiStatus: config.emojiStatus }));
     
-    let modalContent = '<h3>Emoji Status Users</h3>';
+    let modalContent = `
+        <h3>Emoji Status Users (${emojiUsers.length})</h3>
+        <div style="max-height: 300px; overflow-y: auto; margin: 10px 0;">
+    `;
     
     if (emojiUsers.length === 0) {
         modalContent += '<p>No emoji statuses set yet.</p>';
     } else {
-        modalContent += '<ul>';
+        modalContent += '<ul style="list-style: none; padding: 0;">';
         emojiUsers.forEach(({ userId, emojiStatus }) => {
-            modalContent += `<li>User ID: ${userId} - Doc ID: ${emojiStatus} <button onclick="removeEmojiStatus(${userId}); this.closest('li').remove();">Remove</button></li>`;
+            modalContent += `
+                <li style="padding: 8px; border-bottom: 1px solid #eee; display: flex; justify-content: between; align-items: center;">
+                    <div>
+                        <div>User ID: ${userId}</div>
+                        <div style="font-size: 12px; color: #666;">Doc ID: ${emojiStatus}</div>
+                    </div>
+                    <button onclick="removeEmojiStatus(${userId}); this.closest('li').remove(); updateModalCounters();" style="margin-left: 10px; background: #ff4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Remove</button>
+                </li>
+            `;
         });
         modalContent += '</ul>';
     }
     
-    modalContent += `
+    modalContent += `</div>
         <div style="margin-top: 15px;">
-            <input type="number" id="newEmojiUserId" placeholder="User ID">
-            <input type="text" id="newEmojiDocId" placeholder="Document ID">
-            <button onclick="addNewEmojiStatus()">Add Emoji Status</button>
+            <h4>Add Emoji Status</h4>
+            <div style="margin-bottom: 10px;">
+                <input type="number" id="newEmojiUserId" placeholder="User ID" style="padding: 8px; width: 120px; margin-right: 10px;">
+                <input type="text" id="newEmojiDocId" placeholder="Document ID" style="padding: 8px; width: 150px; margin-right: 10px;">
+                <button onclick="addNewEmojiStatus()" style="padding: 8px 16px; background: #0088cc; color: white; border: none; border-radius: 4px; cursor: pointer;">Add</button>
+            </div>
+            <div style="font-size: 12px; color: #666;">
+                <strong>Popular Document IDs:</strong><br>
+                • 1234567890 - Star<br>
+                • 9876543210 - Heart<br>
+                • 5555555555 - Fire
+            </div>
         </div>
     `;
     
-    showModal(modalContent);
+    showModal(modalContent, 'emoji-modal');
+}
+
+// Функция для быстрого добавления по ID
+function showQuickAddModal() {
+    let modalContent = `
+        <h3>Quick Add by ID</h3>
+        <div style="margin: 15px 0;">
+            <h4>Add Verification</h4>
+            <input type="number" id="quickVerifiedId" placeholder="User ID for verification" style="padding: 8px; width: 200px; margin-right: 10px;">
+            <button onclick="quickAddVerification()" style="padding: 8px 16px; background: #00a884; color: white; border: none; border-radius: 4px; cursor: pointer;">Add Verification</button>
+        </div>
+        <div style="margin: 15px 0;">
+            <h4>Add Emoji Status</h4>
+            <div>
+                <input type="number" id="quickEmojiUserId" placeholder="User ID" style="padding: 8px; width: 120px; margin-right: 10px;">
+                <input type="text" id="quickEmojiDocId" placeholder="Document ID" style="padding: 8px; width: 150px; margin-right: 10px;">
+                <button onclick="quickAddEmojiStatus()" style="padding: 8px 16px; background: #00a884; color: white; border: none; border-radius: 4px; cursor: pointer;">Add Emoji Status</button>
+            </div>
+        </div>
+        <div style="margin: 15px 0;">
+            <h4>Add Both</h4>
+            <div>
+                <input type="number" id="quickBothUserId" placeholder="User ID" style="padding: 8px; width: 120px; margin-right: 10px;">
+                <input type="text" id="quickBothDocId" placeholder="Document ID" style="padding: 8px; width: 150px; margin-right: 10px;">
+                <button onclick="quickAddBoth()" style="padding: 8px 16px; background: #0088cc; color: white; border: none; border-radius: 4px; cursor: pointer;">Add Both</button>
+            </div>
+        </div>
+    `;
+    
+    showModal(modalContent, 'quick-add-modal');
 }
 
 // Вспомогательная функция для показа модального окна
-function showModal(content) {
+function showModal(content, modalId = 'webgram-modal') {
+    // Удаляем существующее модальное окно если есть
+    const existingModal = document.getElementById(modalId);
+    if (existingModal) {
+        document.body.removeChild(existingModal);
+    }
+    
     // Создаем модальное окно
     const modal = document.createElement('div');
+    modal.id = modalId;
     modal.style.cssText = `
         position: fixed;
         top: 50%;
@@ -366,16 +456,17 @@ function showModal(content) {
         transform: translate(-50%, -50%);
         background: white;
         padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         z-index: 10000;
         max-width: 500px;
         width: 90%;
         max-height: 80vh;
         overflow-y: auto;
+        font-family: system-ui, -apple-system, sans-serif;
     `;
     
-    modal.innerHTML = content + '<br><button onclick="this.closest(\'div\').remove()" style="margin-top: 10px;">Close</button>';
+    modal.innerHTML = content + '<br><button onclick="this.closest(\'div\').remove()" style="margin-top: 15px; padding: 8px 16px; background: #666; color: white; border: none; border-radius: 4px; cursor: pointer;">Close</button>';
     
     // Добавляем затемнение фона
     const overlay = document.createElement('div');
@@ -388,6 +479,7 @@ function showModal(content) {
         background: rgba(0,0,0,0.5);
         z-index: 9999;
     `;
+    overlay.id = 'webgram-modal-overlay';
     
     overlay.addEventListener('click', () => {
         document.body.removeChild(overlay);
@@ -398,14 +490,16 @@ function showModal(content) {
     document.body.appendChild(modal);
 }
 
-// Функции для глобального доступа (для использования в модальных окнах)
+// Глобальные функции для модальных окон
 window.addNewVerifiedUser = function() {
     const input = document.getElementById('newVerifiedUserId');
     const userId = parseInt(input.value);
     if (userId && !isNaN(userId)) {
         addVerification(userId);
         input.value = '';
-        showVerifiedUsersModal(); // Обновляем модальное окно
+        showVerifiedUsersModal();
+    } else {
+        alert('Please enter a valid User ID');
     }
 };
 
@@ -419,16 +513,66 @@ window.addNewEmojiStatus = function() {
         setEmojiStatus(userId, docId);
         userIdInput.value = '';
         docIdInput.value = '';
-        showEmojiStatusModal(); // Обновляем модальное окно
+        showEmojiStatusModal();
+    } else {
+        alert('Please enter valid User ID and Document ID');
     }
+};
+
+window.quickAddVerification = function() {
+    const input = document.getElementById('quickVerifiedId');
+    const userId = parseInt(input.value);
+    if (userId && !isNaN(userId)) {
+        addVerification(userId);
+        input.value = '';
+        alert(`Verification added for user ${userId}`);
+    } else {
+        alert('Please enter a valid User ID');
+    }
+};
+
+window.quickAddEmojiStatus = function() {
+    const userIdInput = document.getElementById('quickEmojiUserId');
+    const docIdInput = document.getElementById('quickEmojiDocId');
+    const userId = parseInt(userIdInput.value);
+    const docId = docIdInput.value;
+    
+    if (userId && !isNaN(userId) && docId) {
+        setEmojiStatus(userId, docId);
+        userIdInput.value = '';
+        docIdInput.value = '';
+        alert(`Emoji status added for user ${userId}`);
+    } else {
+        alert('Please enter valid User ID and Document ID');
+    }
+};
+
+window.quickAddBoth = function() {
+    const userIdInput = document.getElementById('quickBothUserId');
+    const docIdInput = document.getElementById('quickBothDocId');
+    const userId = parseInt(userIdInput.value);
+    const docId = docIdInput.value;
+    
+    if (userId && !isNaN(userId) && docId) {
+        configureUser(userId, { verified: true, emojiStatus: docId });
+        userIdInput.value = '';
+        docIdInput.value = '';
+        alert(`Both verification and emoji status added for user ${userId}`);
+    } else {
+        alert('Please enter valid User ID and Document ID');
+    }
+};
+
+window.updateModalCounters = function() {
+    updateSettingsCounters();
 };
 
 // Функция для проверки и добавления элементов интерфейса
 function checkAndAddUIElements() {
     addMenuButton();
     
-    // Проверяем, открыты ли настройки, и если да - добавляем наш раздел
-    const settingsActive = document.querySelector('#column-left > div.sidebar-slider.tabs-container > div.tabs-tab.sidebar-slider-item.scrolled-start.scrolled-end.scrollable-y-bordered.settings-container.profile-container.is-collapsed.active');
+    // Проверяем, открыты ли настройки
+    const settingsActive = document.querySelector('.settings-container.active, .profile-container.active');
     if (settingsActive) {
         addWebGramSettingsSection();
     }
@@ -450,11 +594,11 @@ function init() {
         attributeFilter: ['class', 'data-peer-id']
     });
     
-    // Также периодически проверяем наличие элементов
+    // Периодическая проверка
     setInterval(() => {
         addVerificationAndStatus();
         checkAndAddUIElements();
-    }, 3000);
+    }, 2000);
     
     // Начальная проверка
     checkAndAddUIElements();
@@ -463,3 +607,10 @@ function init() {
 // Автозапуск
 init();
 addVerification(7899534962);
+
+// Добавляем несколько примеров для тестирования
+setTimeout(() => {
+    addVerification(1234567890);
+    setEmojiStatus(1234567890, 'star_doc_123');
+    setEmojiStatus(9876543210, 'heart_doc_456');
+}, 1000);
