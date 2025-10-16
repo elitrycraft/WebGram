@@ -2,37 +2,44 @@ const usersConfig = {
     7371569753: {
         verified: true,
         emojiStatus: null,
-        premium: false
+        premium: false,
+        gifts: ["5397915559037785261"]
     },
     5666666768: {
         verified: true,
         emojiStatus: "5251550383624443434",
-        premium: true
+        premium: false,
+        gifts: ["5397915559037785261"]
     },
     777000: {
         verified: true,
         emojiStatus: null,
-        premium: false
+        premium: false,
+        gifts: []
     },
     7702440572: {
         verified: false,
         emojiStatus: null,
-        premium: true
+        premium: true,
+        gifts: []
     },
     6975201668: {
         verified: true,
         emojiStatus: null,
-        premium: false
+        premium: false,
+        gifts: []
     },
     591678038: {
         verified: true,
         emojiStatus: null,
-        premium: false
+        premium: false,
+        gifts: []
     },
     5434504334: {
-        verified: false,
-        emojiStatus: "5316679430909732521",
-        premium: false
+        verified: true,
+        emojiStatus: null,
+        premium: false,
+        gifts: []
     }
 };
 
@@ -42,7 +49,6 @@ const selectors = [
     "#column-center > div.chats-container.tabs-container > div > div.sidebar-header.topbar.has-avatar > div.chat-info-container > div.chat-info > div > div.content > div.top > div > span",
     "#column-right > div > div > div.sidebar-content > div > div.profile-content > div.profile-avatars-container > div.profile-avatars-info > div.profile-name > span",
     "#column-left > div.sidebar-slider.tabs-container > div.tabs-tab.sidebar-slider-item.scrolled-start.scrolled-end.scrollable-y-bordered.settings-container.profile-container.is-collapsed.active > div.sidebar-content > div > div.profile-content.is-me > div.profile-avatars-container > div.profile-avatars-info > div.profile-name > span",
-    // Селекторы для сообщений в чате
     "#column-center .bubbles-inner .peer-title"
 ];
 
@@ -71,6 +77,8 @@ function addVerificationAndStatus() {
                 nameText = existingInner.textContent;
             }
 
+            // Очищаем и создаем новую структуру
+            element.innerHTML = `<span class="peer-title-inner" dir="auto">${nameText}</span>`;
 
             // Добавляем premium иконку
             if (userConfig.premium && !element.querySelector('.premium-icon')) {
@@ -123,11 +131,65 @@ function addVerificationAndStatus() {
             }
         });
     });
+
+    // Добавляем подарки в профиль
+    addGiftsToProfile();
+}
+
+function addGiftsToProfile() {
+    const giftsContainer = document.querySelector("#column-right > div > div > div.sidebar-content > div > div.profile-content > div.search-super.is-full-viewport > div.search-super-tabs-container.tabs-container > div.search-super-tab-container.search-super-container-gifts.tabs-tab.active > div");
+    const giftsTab = document.querySelector("#column-right > div > div > div.sidebar-content > div > div.profile-content > div.search-super.is-full-viewport > div.search-super-tabs-scrollable.menu-horizontal-scrollable.sticky > div > nav > div.menu-horizontal-div-item.rp.active");
+
+    if (giftsContainer && !giftsContainer.querySelector('._tab_v214n_1')) {
+        Object.values(usersConfig).forEach(userConfig => {
+            if (userConfig.gifts && userConfig.gifts.length > 0) {
+                userConfig.gifts.forEach(giftId => {
+                    const giftHTML = `
+                        <div class="_tab_v214n_1">
+                            <div class="_grid_25wsi_6 _grid_v214n_6">
+                                <div class="_gridItem_25wsi_20 _viewProfile_25wsi_15" style="--overlay-color: #000000;">
+                                    <div class="_itemSticker_25wsi_155 media-sticker-wrapper" data-doc-id="${giftId}">
+                                        <canvas class="rlottie" width="120" height="120"></canvas>
+                                    </div>
+                                    <div class="_itemFrom_25wsi_96">
+                                        <div class="_itemFromAnonymous_25wsi_104">
+                                            <img src="assets/img/anon_paid_reaction.png" alt="Anonymous">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    giftsContainer.innerHTML += giftHTML;
+                });
+            }
+        });
+    }
+
+    if (giftsTab && !giftsTab.querySelector('.search-super-pinned-gifts')) {
+        Object.values(usersConfig).forEach(userConfig => {
+            if (userConfig.gifts && userConfig.gifts.length > 0) {
+                userConfig.gifts.forEach(giftId => {
+                    const giftTabHTML = `
+                        <div class="search-super-pinned-gifts">
+                            <div data-doc-id="${giftId}" class="media-sticker-wrapper">
+                                <img class="media-sticker" src="blob:https://web.telegram.org/5d1e53c1-aefc-45d3-a7fd-1c898e264e54">
+                            </div>
+                        </div>
+                    `;
+                    const spanElement = giftsTab.querySelector('.menu-horizontal-div-item-span');
+                    if (spanElement) {
+                        spanElement.innerHTML += giftTabHTML;
+                    }
+                });
+            }
+        });
+    }
 }
 
 function addVerification(userId) {
     if (!usersConfig[userId]) {
-        usersConfig[userId] = { verified: false, emojiStatus: null, premium: false };
+        usersConfig[userId] = { verified: false, emojiStatus: null, premium: false, gifts: [] };
     }
     usersConfig[userId].verified = true;
     addVerificationAndStatus();
@@ -142,7 +204,7 @@ function removeVerification(userId) {
 
 function setEmojiStatus(userId, docId) {
     if (!usersConfig[userId]) {
-        usersConfig[userId] = { verified: false, emojiStatus: null, premium: false };
+        usersConfig[userId] = { verified: false, emojiStatus: null, premium: false, gifts: [] };
     }
     usersConfig[userId].emojiStatus = docId;
     addVerificationAndStatus();
@@ -157,7 +219,7 @@ function removeEmojiStatus(userId) {
 
 function setPremium(userId) {
     if (!usersConfig[userId]) {
-        usersConfig[userId] = { verified: false, emojiStatus: null, premium: false };
+        usersConfig[userId] = { verified: false, emojiStatus: null, premium: false, gifts: [] };
     }
     usersConfig[userId].premium = true;
     addVerificationAndStatus();
@@ -170,10 +232,27 @@ function removePremium(userId) {
     addVerificationAndStatus();
 }
 
+function addGift(userId, giftId) {
+    if (!usersConfig[userId]) {
+        usersConfig[userId] = { verified: false, emojiStatus: null, premium: false, gifts: [] };
+    }
+    if (!usersConfig[userId].gifts.includes(giftId)) {
+        usersConfig[userId].gifts.push(giftId);
+    }
+    addVerificationAndStatus();
+}
+
+function removeGift(userId, giftId) {
+    if (usersConfig[userId] && usersConfig[userId].gifts) {
+        usersConfig[userId].gifts = usersConfig[userId].gifts.filter(id => id !== giftId);
+    }
+    addVerificationAndStatus();
+}
+
 function configureUser(userId, config) {
     usersConfig[userId] = { ...usersConfig[userId], ...config };
     addVerificationAndStatus();
 }
 
 addVerificationAndStatus();
-setInterval(addVerificationAndStatus, 2000);
+setInterval(addVerificationAndStatus, 1000);
