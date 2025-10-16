@@ -101,7 +101,6 @@ function cleanupWebgramPanel() {
 
 // Открываем панель настроек
 async function openSettingsPanel() {
-    cleanupWebgramPanel();
     
     const profileName = document.querySelector("#column-left .profile-name .peer-title");
     if (profileName) {
