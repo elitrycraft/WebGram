@@ -124,8 +124,6 @@ function cleanupOldPanels() {
 
 // Открываем панель настроек
 async function openSettingsPanel() {
-    // Удаляем старые панели перед открытием
-    cleanupOldPanels();
     
     const profileName = document.querySelector("#column-left .profile-name .peer-title");
     if (profileName) {
@@ -268,6 +266,7 @@ async function openSettingsPanel() {
     document.querySelector('.webgram-settings-container .sidebar-close-button').addEventListener('click', () => {
         document.querySelector('.webgram-settings-container').remove();
     });
+    cleanupOldPanels();
 }
 
 // Сохраняем настройки в разные endpoint'ы
