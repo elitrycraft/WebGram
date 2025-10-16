@@ -116,6 +116,7 @@ async function openSettingsPanel() {
     const profileName = document.querySelector("#column-left .profile-name .peer-title");
     if (profileName) {
         currentUserId = parseInt(profileName.getAttribute('data-peer-id'));
+        cleanupWebgramPanel();
     }
     
     if (!currentUserId) {
@@ -241,7 +242,7 @@ async function openSettingsPanel() {
         </div>
     `;
     const sidebarSlider = document.querySelector("#column-left > div.sidebar-slider.tabs-container");
-    sidebarSlider.insertAdjacentHTML('beforeend', settingsPanelHTML);
+    sidebarSlider.innerHTML = settingsPanelHTML;
     
     document.getElementById('save-settings').addEventListener('click', saveSettings);
     document.querySelector('.webgram-settings-container .sidebar-close-button').addEventListener('click', () => {
