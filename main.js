@@ -29,11 +29,28 @@ function addVerificationAndStatus() {
             const userId = parseInt(peerId);
             const userConfig = usersConfig[userId];
             if (!userConfig) return;
+
+            // Добавляем класс with-icons если его нет
+            if (!element.classList.contains('with-icons')) {
+                element.classList.add('with-icons');
+            }
+
+            // Создаем span для имени если его нет
+            let nameSpan = element.querySelector('.peer-title-inner');
+            if (!nameSpan) {
+                const currentName = element.textContent;
+                element.innerHTML = `<span class="peer-title-inner" dir="auto">${currentName}</span>`;
+                nameSpan = element.querySelector('.peer-title-inner');
+            }
+
+            // Добавляем verified иконку
             if (userConfig.verified && !element.querySelector('.verified-icon')) {
                 element.innerHTML += '<span class="verified-icon"><svg viewBox="0 0 26 26" width="26" height="26" class="verified-icon-svg"><use href="#verified-icon-check" class="verified-icon-check"></use><use href="#verified-icon-background" class="verified-icon-background"></use></svg></span>';
             }
+
+            // Добавляем emoji статус
             if (userConfig.emojiStatus && !element.querySelector('.emoji-status')) {
-                element.innerHTML += `<span class="emoji-status media-sticker-wrapper" data-doc-id="${userConfig.emojiStatus}"><img class="media-sticker" src="blob:https://web.telegram.org/c9e9a04a-184b-40a7-9e78-79fd4e719ed1"></span>`;
+                element.innerHTML += `<span class="emoji-status media-sticker-wrapper" data-doc-id="${userConfig.emojiStatus}"><img class="media-sticker" src="blob:https://web.telegram.org/61b6b169-e8f1-4928-988a-b3919d42760e"></span>`;
             }
         });
     });
