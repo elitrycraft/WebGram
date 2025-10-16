@@ -6,7 +6,7 @@ const usersConfig = {
     },
     5666666768: {
         verified: true,
-        emojiStatus: "5251550383624443434",
+        emojiStatus: "5316679430909732521",
         premium: false
     },
     777000: {
