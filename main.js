@@ -1,17 +1,38 @@
 const usersConfig = {
+    7371569753: {
+        verified: true,
+        emojiStatus: null,
+        premium: false
+    },
+    5666666768: {
+        verified: true,
+        emojiStatus: "5251550383624443434",
+        premium: false
+    },
+    777000: {
+        verified: true,
+        emojiStatus: null,
+        premium: false
+    },
+    7702440572: {
+        verified: false,
+        emojiStatus: null,
+        premium: true
+    },
     6975201668: {
         verified: true,
         emojiStatus: null,
         premium: false
     },
     591678038: {
-        verified: false,
+        verified: true,
         emojiStatus: null,
-        premium: true
+        premium: false
     }
 };
 
 const selectors = [
+    "#folders-container > div.scrollable.scrollable-y.tabs-tab.chatlist-parts.folders-scrollable.scrolled-start.scrollable-y-bordered.active > div.chatlist-top > ul > a.row.no-wrap.row-with-padding.row-clickable.hover-effect.rp.chatlist-chat.chatlist-chat-bigger.row-big._Item_5idej_1.active > div.row-row.row-title-row.dialog-title > div.row-title.no-wrap.user-title > span",
     "#folders-container > div.scrollable.scrollable-y.tabs-tab.chatlist-parts.folders-scrollable.scrolled-start.scrollable-y-bordered.active > div.chatlist-top > ul > a.row.no-wrap.row-with-padding.row-clickable.hover-effect.rp.chatlist-chat.chatlist-chat-bigger.row-big.is-muted._Item_5idej_1.active > div.row-row.row-title-row.dialog-title > div.row-title.no-wrap.user-title > span.peer-title.with-icons",
     "#column-center > div.chats-container.tabs-container > div > div.sidebar-header.topbar.has-avatar > div.chat-info-container > div.chat-info > div > div.content > div.top > div > span",
     "#column-right > div > div > div.sidebar-content > div > div.profile-content > div.profile-avatars-container > div.profile-avatars-info > div.profile-name > span",
