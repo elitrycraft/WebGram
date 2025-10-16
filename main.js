@@ -8,8 +8,8 @@ const usersConfig = {
         emojiStatus: null
     },
     6612116145: {
-        verified: true,
-        emojiStatus: null
+        verified: false,
+        emojiStatus: "5316679430909732521"
     },
 };
 
