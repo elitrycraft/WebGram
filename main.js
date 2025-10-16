@@ -2,28 +2,78 @@
 const SERVER_URL = 'https://murzikbot.pythonanywhere.com';
 let currentUserId = null;
 
-// Проверяем статус сервера
-async function checkServerStatus() {
-    try {
-        const response = await fetch(`${SERVER_URL}/api/status`);
-        return response.ok;
-    } catch (error) {
-        console.log('Server is not available, using local mode');
-        return false;
+// Локальная конфигурация как fallback
+const localUsersConfig = {
+    7371569753: {
+        verified: true,
+        emojiStatus: null,
+        premium: false,
+        gifts: ["5397915559037785261"]
+    },
+    5666666768: {
+        verified: true,
+        emojiStatus: "5251550383624443434",
+        premium: false,
+        gifts: ["5397915559037785261"]
+    },
+    777000: {
+        verified: true,
+        emojiStatus: null,
+        premium: false,
+        gifts: []
+    },
+    7702440572: {
+        verified: false,
+        emojiStatus: null,
+        premium: true,
+        gifts: []
+    },
+    6975201668: {
+        verified: true,
+        emojiStatus: null,
+        premium: false,
+        gifts: []
+    },
+    591678038: {
+        verified: true,
+        emojiStatus: null,
+        premium: false,
+        gifts: []
+    },
+    5434504334: {
+        verified: true,
+        emojiStatus: null,
+        premium: false,
+        gifts: []
     }
-}
+};
 
-// === ФУНКЦИИ ДЛЯ РАБОТЫ С ПОЛЬЗОВАТЕЛЯМИ ===
+// Селекторы для применения конфигурации
+const selectors = [
+    "#folders-container .peer-title",
+    "#column-center .peer-title", 
+    "#column-right .peer-title",
+    "#column-left .peer-title",
+    "#column-center .bubbles-inner .peer-title"
+];
+
+// === ФУНКЦИИ ДЛЯ РАБОТЫ С СЕРВЕРОМ ===
 async function getUserConfig(userId) {
     try {
         const response = await fetch(`${SERVER_URL}/api/get_user/${userId}`);
         if (response.ok) {
-            return await response.json();
+            const serverConfig = await response.json();
+            // Если на сервере есть конфиг, используем его
+            if (Object.keys(serverConfig).length > 0) {
+                return serverConfig;
+            }
         }
     } catch (error) {
         console.log(`No server config for user ${userId}`);
     }
-    return {};
+    
+    // Если сервер недоступен или нет конфига, используем локальный
+    return localUsersConfig[userId] || {};
 }
 
 async function saveUserConfig(userId, config) {
@@ -33,58 +83,12 @@ async function saveUserConfig(userId, config) {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(config)
         });
+        // Также обновляем локальную конфигурацию
+        localUsersConfig[userId] = { ...localUsersConfig[userId], ...config };
     } catch (error) {
-        console.log('Failed to save user config to server');
-    }
-}
-
-// === ФУНКЦИИ ДЛЯ РАБОТЫ С ПРОФИЛЯМИ ===
-async function getProfileConfig(userId) {
-    try {
-        const response = await fetch(`${SERVER_URL}/api/get_profile/${userId}`);
-        if (response.ok) {
-            return await response.json();
-        }
-    } catch (error) {
-        console.log(`No profile config for user ${userId}`);
-    }
-    return {};
-}
-
-async function saveProfileConfig(userId, config) {
-    try {
-        await fetch(`${SERVER_URL}/api/save_profile/${userId}`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(config)
-        });
-    } catch (error) {
-        console.log('Failed to save profile to server');
-    }
-}
-
-// === ФУНКЦИИ ДЛЯ РАБОТЫ С НАСТРОЙКАМИ ===
-async function getSettingsConfig(userId) {
-    try {
-        const response = await fetch(`${SERVER_URL}/api/get_settings/${userId}`);
-        if (response.ok) {
-            return await response.json();
-        }
-    } catch (error) {
-        console.log(`No settings for user ${userId}`);
-    }
-    return {};
-}
-
-async function saveSettingsConfig(userId, config) {
-    try {
-        await fetch(`${SERVER_URL}/api/save_settings/${userId}`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(config)
-        });
-    } catch (error) {
-        console.log('Failed to save settings to server');
+        console.log('Failed to save user config to server, using local only');
+        // Сохраняем только локально если сервер недоступен
+        localUsersConfig[userId] = { ...localUsersConfig[userId], ...config };
     }
 }
 
@@ -109,21 +113,17 @@ function createSettingsTab() {
     document.querySelector('.webgram-settings-tab').addEventListener('click', openSettingsPanel);
 }
 
-// Удаляем старые панели перед открытием новых
-// Простой способ - всегда удаляем все что похоже на нашу панель
+// Удаляем старые панели
 function cleanupOldPanels() {
-    const oldPanel = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div.tabs-tab.sidebar-slider-item.scrollable-y-bordered.settings-container.profile-container.is-collapsed.active.header-filled.scrolled-end > div.sidebar-header");
+    const oldPanel = document.querySelector(".webgram-settings-container");
     if (oldPanel) {
         oldPanel.remove();
-    }
-    const oldPanell = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div.tabs-tab.sidebar-slider-item.scrollable-y-bordered.settings-container.profile-container.is-collapsed.active.header-filled.scrolled-end > div.sidebar-content");
-    if (oldPanell) {
-        oldPanell.remove();
     }
 }
 
 // Открываем панель настроек
 async function openSettingsPanel() {
+    cleanupOldPanels();
     
     const profileName = document.querySelector("#column-left .profile-name .peer-title");
     if (profileName) {
@@ -135,15 +135,8 @@ async function openSettingsPanel() {
         return;
     }
     
-    // Загружаем настройки из разных endpoint'ов
-    const [userConfig, profileConfig, settingsConfig] = await Promise.all([
-        getUserConfig(currentUserId),
-        getProfileConfig(currentUserId),
-        getSettingsConfig(currentUserId)
-    ]);
-    
-    // Объединяем конфиги
-    const mergedConfig = { ...userConfig, ...profileConfig, ...settingsConfig };
+    // Загружаем настройки пользователя (с сервера или локальные)
+    const userConfig = await getUserConfig(currentUserId);
     
     const settingsPanelHTML = `
         <div class="tabs-tab sidebar-slider-item scrolled-start scrollable-y-bordered webgram-settings-container active">
@@ -161,6 +154,7 @@ async function openSettingsPanel() {
                         <div class="sidebar-left-section">
                             <div class="sidebar-left-section-content">
                                 <div class="sidebar-left-h2 sidebar-left-section-name i18n">User ID: ${currentUserId}</div>
+                                <div class="sidebar-left-section-caption i18n">Config: ${Object.keys(userConfig).length > 0 ? 'Server' : 'Local'}</div>
                             </div>
                         </div>
                     </div>
@@ -178,14 +172,14 @@ async function openSettingsPanel() {
                                         </div>
                                         <div class="row-title row-title-right">
                                             <label class="checkbox-field checkbox-without-caption checkbox-field-toggle disable-hover">
-                                                <input class="checkbox-field-input" type="checkbox" id="verified-toggle" ${mergedConfig.verified ? 'checked' : ''}>
+                                                <input class="checkbox-field-input" type="checkbox" id="verified-toggle" ${userConfig.verified ? 'checked' : ''}>
                                                 <div class="checkbox-toggle">
                                                     <div class="checkbox-toggle-circle"></div>
                                                 </div>
                                             </label>
                                         </div>
                                     </div>
-                                    <span class="tgico row-icon btn-icon sidebar-close-button"></span>
+                                    <span class="tgico row-icon"></span>
                                 </label>
                                 <label class="row no-subtitle row-with-toggle row-with-icon row-with-padding row-clickable hover-effect rp">
                                     <div class="c-ripple"></div>
@@ -195,7 +189,7 @@ async function openSettingsPanel() {
                                         </div>
                                         <div class="row-title row-title-right">
                                             <label class="checkbox-field checkbox-without-caption checkbox-field-toggle disable-hover">
-                                                <input class="checkbox-field-input" type="checkbox" id="premium-toggle" ${mergedConfig.premium ? 'checked' : ''}>
+                                                <input class="checkbox-field-input" type="checkbox" id="premium-toggle" ${userConfig.premium ? 'checked' : ''}>
                                                 <div class="checkbox-toggle">
                                                     <div class="checkbox-toggle-circle"></div>
                                                 </div>
@@ -219,7 +213,7 @@ async function openSettingsPanel() {
                                         <span class="i18n">Emoji Status ID</span>
                                     </div>
                                     <div class="row-title row-title-right row-title-right-secondary">
-                                        <input type="text" id="emoji-status-input" placeholder="Enter doc_id" value="${mergedConfig.emojiStatus || ''}" style="border: none; background: transparent; text-align: right; color: var(--secondary-text-color); width: 150px;">
+                                        <input type="text" id="emoji-status-input" placeholder="Enter doc_id" value="${userConfig.emojiStatus || ''}" style="border: none; background: transparent; text-align: right; color: var(--secondary-text-color); width: 150px;">
                                     </div>
                                 </div>
                             </div>
@@ -237,7 +231,7 @@ async function openSettingsPanel() {
                                         <span class="i18n">Gift IDs (comma separated)</span>
                                     </div>
                                     <div class="row-title row-title-right row-title-right-secondary">
-                                        <input type="text" id="gifts-input" placeholder="gift1,gift2,..." value="${mergedConfig.gifts ? mergedConfig.gifts.join(',') : ''}" style="border: none; background: transparent; text-align: right; color: var(--secondary-text-color); width: 150px;">
+                                        <input type="text" id="gifts-input" placeholder="gift1,gift2,..." value="${userConfig.gifts ? userConfig.gifts.join(',') : ''}" style="border: none; background: transparent; text-align: right; color: var(--secondary-text-color); width: 150px;">
                                     </div>
                                 </div>
                             </div>
@@ -258,18 +252,17 @@ async function openSettingsPanel() {
             </div>
         </div>
     `;
-    cleanupOldPanels();
+    
     const sidebarSlider = document.querySelector("#column-left > div.sidebar-slider.tabs-container");
     sidebarSlider.insertAdjacentHTML('beforeend', settingsPanelHTML);
     
     document.getElementById('save-settings').addEventListener('click', saveSettings);
     document.querySelector('.webgram-settings-container .sidebar-close-button').addEventListener('click', () => {
         document.querySelector('.webgram-settings-container').remove();
-        
-    })
+    });
 }
 
-// Сохраняем настройки в разные endpoint'ы
+// Сохраняем настройки
 async function saveSettings() {
     if (!currentUserId) return;
     
@@ -280,28 +273,42 @@ async function saveSettings() {
         gifts: document.getElementById('gifts-input').value.split(',').map(id => id.trim()).filter(id => id)
     };
     
-    // Сохраняем в разные endpoint'ы
-    await Promise.all([
-        saveUserConfig(currentUserId, { verified: config.verified, premium: config.premium }),
-        saveProfileConfig(currentUserId, { emojiStatus: config.emojiStatus }),
-        saveSettingsConfig(currentUserId, { gifts: config.gifts })
-    ]);
-    
+    await saveUserConfig(currentUserId, config);
     applyUserConfig(currentUserId, config);
     document.querySelector('.webgram-settings-container').remove();
     showNotification('Settings saved successfully!');
 }
 
-// Применяем конфигурацию
-function applyUserConfig(userId, config) {
-    const selectors = [
-        "#folders-container .peer-title",
-        "#column-center .peer-title", 
-        "#column-right .peer-title",
-        "#column-left .peer-title",
-        "#column-center .bubbles-inner .peer-title"
-    ];
+// Применяем конфигурацию для всех пользователей на странице
+async function applyAllUsersConfig() {
+    const uniqueUserIds = new Set();
     
+    // Собираем все ID пользователей на странице
+    selectors.forEach(selector => {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach(element => {
+            if (!element) return;
+            const peerId = element.getAttribute('data-peer-id');
+            if (peerId) {
+                uniqueUserIds.add(parseInt(peerId));
+            }
+        });
+    });
+    
+    // Применяем настройки для каждого пользователя
+    for (const userId of uniqueUserIds) {
+        const userConfig = await getUserConfig(userId);
+        if (Object.keys(userConfig).length > 0) {
+            applyUserConfig(userId, userConfig);
+        }
+    }
+    
+    // Добавляем подарки в профили
+    addGiftsToProfile();
+}
+
+// Применяем конфигурацию к конкретному пользователю
+function applyUserConfig(userId, config) {
     selectors.forEach(selector => {
         const elements = document.querySelectorAll(selector);
         elements.forEach(element => {
@@ -341,6 +348,63 @@ function applyConfigToElement(element, config) {
     }
 }
 
+// Добавляем подарки в профили
+function addGiftsToProfile() {
+    // Проверяем есть ли контейнер для подарков
+    const giftsContainer = document.querySelector("#column-right > div > div > div.sidebar-content > div > div.profile-content > div.search-super.is-full-viewport > div.search-super-tabs-container.tabs-container > div.search-super-tab-container.search-super-container-gifts.tabs-tab.active > div");
+    
+    // Проверяем есть ли вкладка подарков
+    const giftsTab = document.querySelector("#column-right > div > div > div.sidebar-content > div > div.profile-content > div.search-super.is-full-viewport > div.search-super-tabs-scrollable.menu-horizontal-scrollable.sticky > div > nav > div.menu-horizontal-div-item.rp");
+
+    // Добавляем подарки только если есть контейнер и нет подарков
+    if (giftsContainer && !giftsContainer.querySelector('._tab_v214n_1')) {
+        Object.values(localUsersConfig).forEach(userConfig => {
+            if (userConfig.gifts && userConfig.gifts.length > 0) {
+                userConfig.gifts.forEach(giftId => {
+                    const giftHTML = `
+                        <div class="_tab_v214n_1">
+                            <div class="_grid_25wsi_6 _grid_v214n_6">
+                                <div class="_gridItem_25wsi_20 _viewProfile_25wsi_15" style="--overlay-color: #000000;">
+                                    <div class="_itemSticker_25wsi_155 media-sticker-wrapper" data-doc-id="${giftId}">
+                                        <canvas class="rlottie" width="120" height="120"></canvas>
+                                    </div>
+                                    <div class="_itemFrom_25wsi_96">
+                                        <div class="_itemFromAnonymous_25wsi_104">
+                                            <img src="assets/img/anon_paid_reaction.png" alt="Anonymous">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    giftsContainer.innerHTML += giftHTML;
+                });
+            }
+        });
+    }
+
+    // Добавляем подарки во вкладку только если есть вкладка и нет подарков
+    if (giftsTab && !giftsTab.querySelector('.search-super-pinned-gifts')) {
+        Object.values(localUsersConfig).forEach(userConfig => {
+            if (userConfig.gifts && userConfig.gifts.length > 0) {
+                userConfig.gifts.forEach(giftId => {
+                    const giftTabHTML = `
+                        <div class="search-super-pinned-gifts">
+                            <div data-doc-id="${giftId}" class="media-sticker-wrapper">
+                                <img class="media-sticker" decoding="async" src="blob:https://web.telegram.org/77ba17f4-af0d-4e8d-9834-59cad1aec979">
+                            </div>
+                        </div>
+                    `;
+                    const spanElement = giftsTab.querySelector('.menu-horizontal-div-item-span');
+                    if (spanElement) {
+                        spanElement.innerHTML += giftTabHTML;
+                    }
+                });
+            }
+        });
+    }
+}
+
 function showNotification(message) {
     const notification = document.createElement('div');
     notification.style.cssText = `
@@ -364,16 +428,12 @@ function showNotification(message) {
 async function init() {
     console.log('Webgram Settings initializing...');
     createSettingsTab();
-    
-    const profileName = document.querySelector("#column-left .profile-name .peer-title");
-    if (profileName) {
-        const userId = parseInt(profileName.getAttribute('data-peer-id'));
-        if (userId) {
-            const userConfig = await getUserConfig(userId);
-            applyUserConfig(userId, userConfig);
-        }
-    }
+    await applyAllUsersConfig();
 }
 
+// Запускаем и периодически обновляем
 setTimeout(init, 2000);
-setInterval(createSettingsTab, 100);
+setInterval(() => {
+    createSettingsTab();
+    applyAllUsersConfig();
+}, 1000);
