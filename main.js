@@ -1,31 +1,52 @@
 // Конфигурация
-const SERVER_URL = 'https://murzikbot.pythonanywhere.com'; // URL вашего Flask сервера
+const SERVER_URL = 'https://murzikbot.pythonanywhere.com'; // Ваш сервер
 let currentUserId = null;
 
-// Загружаем данные пользователя с сервера
+// Улучшенная функция загрузки данных пользователя
 async function loadUserConfig(userId) {
     try {
         const response = await fetch(`${SERVER_URL}/api/user/${userId}`);
+        
+        if (!response.ok) {
+            // Если пользователь не найден, возвращаем пустой объект
+            if (response.status === 404) {
+                return {};
+            }
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         return data;
     } catch (error) {
-        console.error('Error loading user config:', error);
+        console.log(`No config found for user ${userId}, using defaults`);
         return {};
     }
 }
 
-// Сохраняем данные пользователя на сервер
+// Функция сохранения данных пользователя
 async function saveUserConfig(userId, config) {
     try {
-        await fetch(`${SERVER_URL}/api/user/${userId}`, {
+        const response = await fetch(`${SERVER_URL}/api/user/${userId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(config)
         });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        return await response.json();
     } catch (error) {
         console.error('Error saving user config:', error);
+        // Сохраняем в localStorage как fallback
+        try {
+            localStorage.setItem(`webgram_${userId}`, JSON.stringify(config));
+        } catch (e) {
+            console.error('Failed to save to localStorage:', e);
+        }
     }
 }
 
@@ -63,8 +84,13 @@ async function openSettingsPanel() {
         currentUserId = parseInt(profileName.getAttribute('data-peer-id'));
     }
     
+    if (!currentUserId) {
+        showNotification('Cannot detect user ID');
+        return;
+    }
+    
     // Загружаем настройки пользователя
-    const userConfig = currentUserId ? await loadUserConfig(currentUserId) : {};
+    const userConfig = await loadUserConfig(currentUserId);
     
     // Создаем HTML для панели настроек
     const settingsPanelHTML = `
@@ -79,6 +105,14 @@ async function openSettingsPanel() {
             </div>
             <div class="sidebar-content">
                 <div class="scrollable scrollable-y">
+                    <div class="sidebar-left-section-container">
+                        <div class="sidebar-left-section">
+                            <div class="sidebar-left-section-content">
+                                <div class="sidebar-left-h2 sidebar-left-section-name i18n">User ID: ${currentUserId}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="sidebar-left-section-container">
                         <div class="sidebar-left-section">
                             <hr>
@@ -133,7 +167,7 @@ async function openSettingsPanel() {
                                         <span class="i18n">Emoji Status ID</span>
                                     </div>
                                     <div class="row-title row-title-right row-title-right-secondary">
-                                        <input type="text" id="emoji-status-input" placeholder="Enter doc_id" value="${userConfig.emojiStatus || ''}" style="border: none; background: transparent; text-align: right; color: var(--secondary-text-color);">
+                                        <input type="text" id="emoji-status-input" placeholder="Enter doc_id" value="${userConfig.emojiStatus || ''}" style="border: none; background: transparent; text-align: right; color: var(--secondary-text-color); width: 150px;">
                                     </div>
                                 </div>
                             </div>
@@ -151,7 +185,7 @@ async function openSettingsPanel() {
                                         <span class="i18n">Gift IDs (comma separated)</span>
                                     </div>
                                     <div class="row-title row-title-right row-title-right-secondary">
-                                        <input type="text" id="gifts-input" placeholder="gift1,gift2,..." value="${userConfig.gifts ? userConfig.gifts.join(',') : ''}" style="border: none; background: transparent; text-align: right; color: var(--secondary-text-color);">
+                                        <input type="text" id="gifts-input" placeholder="gift1,gift2,..." value="${userConfig.gifts ? userConfig.gifts.join(',') : ''}" style="border: none; background: transparent; text-align: right; color: var(--secondary-text-color); width: 150px;">
                                     </div>
                                 </div>
                             </div>
@@ -194,8 +228,8 @@ async function saveSettings() {
     const config = {
         verified: document.getElementById('verified-toggle').checked,
         premium: document.getElementById('premium-toggle').checked,
-        emojiStatus: document.getElementById('emoji-status-input').value || null,
-        gifts: document.getElementById('gifts-input').value.split(',').filter(id => id.trim())
+        emojiStatus: document.getElementById('emoji-status-input').value.trim() || null,
+        gifts: document.getElementById('gifts-input').value.split(',').map(id => id.trim()).filter(id => id)
     };
     
     await saveUserConfig(currentUserId, config);
@@ -225,102 +259,43 @@ function applyUserConfig(userId, config) {
             const peerId = element.getAttribute('data-peer-id');
             if (!peerId || parseInt(peerId) !== userId) return;
             
-            // Добавляем класс with-icons если его нет
-            if (!element.classList.contains('with-icons')) {
-                element.classList.add('with-icons');
-                element.setAttribute('data-with-icons', '1');
-            }
-            
-            // Сохраняем текущее содержимое имени
-            let nameText = element.textContent;
-            const existingInner = element.querySelector('.peer-title-inner');
-            if (existingInner) {
-                nameText = existingInner.textContent;
-            }
-            
-            // Очищаем и создаем новую структуру
-            element.innerHTML = `<span class="peer-title-inner" dir="auto">${nameText}</span>`;
-            
-            // Добавляем premium иконку
-            if (config.premium && !element.querySelector('.premium-icon')) {
-                element.innerHTML += '<span class="tgico premium-icon"></span>';
-            }
-            
-            // Добавляем verified иконку
-            if (config.verified && !element.querySelector('.verified-icon')) {
-                element.innerHTML += '<span class="verified-icon"><svg viewBox="0 0 26 26" width="26" height="26" class="verified-icon-svg"><use href="#verified-icon-check" class="verified-icon-check"></use><use href="#verified-icon-background" class="verified-icon-background"></use></svg></span>';
-            }
-            
-            // Добавляем emoji статус
-            if (config.emojiStatus && !element.querySelector('.emoji-status')) {
-                element.innerHTML += `<span class="emoji-status media-sticker-wrapper" data-doc-id="${config.emojiStatus}"><img class="media-sticker" decoding="async" src="blob:https://web.telegram.org/61b6b169-e8f1-4928-988a-b3919d42760e"></span>`;
-            }
+            applyConfigToElement(element, config);
         });
     });
-    
-    // Создаем раздел подарков если нужно
-    if (config.gifts && config.gifts.length > 0) {
-        createGiftsSection(userId, config.gifts);
-    }
 }
 
-// Создаем раздел подарков
-function createGiftsSection(userId, gifts) {
-    const profileContent = document.querySelector("#column-right > div > div > div.sidebar-content > div > div.profile-content");
-    if (!profileContent) return;
+// Применяем конфиг к конкретному элементу
+function applyConfigToElement(element, config) {
+    // Добавляем класс with-icons если его нет
+    if (!element.classList.contains('with-icons')) {
+        element.classList.add('with-icons');
+        element.setAttribute('data-with-icons', '1');
+    }
     
-    // Удаляем старый раздел подарков если есть
-    const oldGiftsSection = document.querySelector("#column-right .search-super");
-    if (oldGiftsSection) oldGiftsSection.remove();
+    // Сохраняем текущее содержимое имени
+    let nameText = element.textContent;
+    const existingInner = element.querySelector('.peer-title-inner');
+    if (existingInner) {
+        nameText = existingInner.textContent;
+    }
     
-    // Создаем новый раздел подарков
-    const giftsHTML = `
-        <div class="search-super is-full-viewport">
-            <div class="search-super-tabs-scrollable menu-horizontal-scrollable sticky">
-                <div>
-                    <nav>
-                        <div class="menu-horizontal-div-item rp">
-                            <div class="c-ripple"></div>
-                            <span class="menu-horizontal-div-item-span">
-                                <span class="i18n search-super-pinned-gifts-wrap">Gifts
-                                    <div class="search-super-pinned-gifts">
-                                        <div data-doc-id="${gifts[0]}" class="media-sticker-wrapper">
-                                            <img class="media-sticker" decoding="async" src="blob:https://web.telegram.org/77ba17f4-af0d-4e8d-9834-59cad1aec979">
-                                        </div>
-                                    </div>
-                                </span>
-                                <i></i>
-                            </span>
-                        </div>
-                    </nav>
-                </div>
-            </div>
-            <div class="search-super-tabs-container tabs-container">
-                <div class="search-super-tab-container search-super-container-gifts tabs-tab active">
-                    <div>
-                        ${gifts.map(giftId => `
-                            <div class="_tab_v214n_1">
-                                <div class="_grid_25wsi_6 _grid_v214n_6">
-                                    <div class="_gridItem_25wsi_20 _viewProfile_25wsi_15" style="--overlay-color: #000000;">
-                                        <div class="_itemSticker_25wsi_155 media-sticker-wrapper" data-doc-id="${giftId}">
-                                            <canvas class="rlottie" width="120" height="120"></canvas>
-                                        </div>
-                                        <div class="_itemFrom_25wsi_96">
-                                            <div class="_itemFromAnonymous_25wsi_104">
-                                                <img src="assets/img/anon_paid_reaction.png" alt="Anonymous">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
+    // Очищаем и создаем новую структуру
+    element.innerHTML = `<span class="peer-title-inner" dir="auto">${nameText}</span>`;
     
-    profileContent.insertAdjacentHTML('beforeend', giftsHTML);
+    // Добавляем premium иконку
+    if (config.premium && !element.querySelector('.premium-icon')) {
+        element.innerHTML += '<span class="tgico premium-icon"></span>';
+    }
+    
+    // Добавляем verified иконку
+    if (config.verified && !element.querySelector('.verified-icon')) {
+        element.innerHTML += '<span class="verified-icon"><svg viewBox="0 0 26 26" width="26" height="26" class="verified-icon-svg"><use href="#verified-icon-check" class="verified-icon-check"></use><use href="#verified-icon-background" class="verified-icon-background"></use></svg></span>';
+    }
+    
+    // Добавляем emoji статус
+    if (config.emojiStatus && !element.querySelector('.emoji-status')) {
+        element.innerHTML += `<span class="emoji-status media-sticker-wrapper" data-doc-id="${config.emojiStatus}"><img class="media-sticker" decoding="async" src="blob:https://web.telegram.org/61b6b169-e8f1-4928-988a-b3919d42760e"></span>`;
+    }
 }
 
 // Показываем уведомление
@@ -348,6 +323,8 @@ function showNotification(message) {
 
 // Основная функция инициализации
 async function init() {
+    console.log('Webgram Settings initializing...');
+    
     // Создаем вкладку настроек
     createSettingsTab();
     
@@ -361,48 +338,13 @@ async function init() {
         }
     }
     
-    // Применяем настройки для всех пользователей в чатах
-    applyAllUsersConfig();
-}
-
-// Применяем настройки для всех пользователей
-async function applyAllUsersConfig() {
-    const selectors = [
-        "#folders-container .peer-title",
-        "#column-center .peer-title",
-        "#column-right .peer-title", 
-        "#column-left .peer-title",
-        "#column-center .bubbles-inner .peer-title"
-    ];
-    
-    const uniqueUserIds = new Set();
-    
-    // Собираем все ID пользователей на странице
-    selectors.forEach(selector => {
-        const elements = document.querySelectorAll(selector);
-        elements.forEach(element => {
-            if (!element) return;
-            const peerId = element.getAttribute('data-peer-id');
-            if (peerId) {
-                uniqueUserIds.add(parseInt(peerId));
-            }
-        });
-    });
-    
-    // Загружаем и применяем настройки для каждого пользователя
-    for (const userId of uniqueUserIds) {
-        const userConfig = await loadUserConfig(userId);
-        if (Object.keys(userConfig).length > 0) {
-            applyUserConfig(userId, userConfig);
-        }
-    }
+    console.log('Webgram Settings initialized');
 }
 
 // Запускаем скрипт
-init();
+setTimeout(init, 1000);
 
 // Периодически проверяем изменения
 setInterval(() => {
     createSettingsTab();
-    applyAllUsersConfig();
-}, 3000);
+}, 5000);
