@@ -101,7 +101,6 @@ function cleanupWebgramPanel() {
 
 // Открываем панель настроек
 async function openSettingsPanel() {
-    cleanupWebgramPanel();
     
     // Получаем ID пользователя
     const profileName = document.querySelector("#column-left .profile-name .peer-title");
@@ -269,7 +268,7 @@ async function openSettingsPanel() {
             </div>
         </div>
     `;
-    
+    cleanupWebgramPanel();
     // Вставляем панель в body
     document.body.insertAdjacentHTML('beforeend', settingsPanelHTML);
     
