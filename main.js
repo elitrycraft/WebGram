@@ -116,6 +116,7 @@ async function openSettingsPanel() {
     const profileName = document.querySelector("#column-left .profile-name .peer-title");
     if (profileName) {
         currentUserId = parseInt(profileName.getAttribute('data-peer-id'));
+        cleanupWebgramPanel()
     }
     
     if (!currentUserId) {
@@ -125,8 +126,6 @@ async function openSettingsPanel() {
     
     // Загружаем настройки пользователя (с сервера или локальные)
     const userConfig = await getUserConfig(currentUserId);
-
-    cleanupWebgramPanel()
     
     const settingsPanelHTML = `
         <div class="tabs-tab sidebar-slider-item scrolled-start scrollable-y-bordered webgram-settings-container active">
@@ -247,7 +246,7 @@ async function openSettingsPanel() {
     
     document.getElementById('save-settings').addEventListener('click', saveSettings);
     document.querySelector('.webgram-settings-container .sidebar-close-button').addEventListener('click', () => {
-        cleanupWebgramPanel()
+        alert("test")
     });
 }
 
