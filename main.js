@@ -10,9 +10,9 @@ const usersConfig = {
         premium: false
     },
     777000: {
-        verified: true,
+        verified: false,
         emojiStatus: null,
-        premium: false
+        premium: true
     },
     7702440572: {
         verified: false,
