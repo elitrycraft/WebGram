@@ -32,7 +32,7 @@ const usersConfig = {
     5434504334: {
         verified: true,
         emojiStatus: null,
-        premium: false
+        premium: true
     }
 };
 
