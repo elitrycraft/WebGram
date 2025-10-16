@@ -1,24 +1,14 @@
 const usersConfig = {
-    7371569753: {
+    6975201668: {
         verified: true,
         emojiStatus: null,
         premium: false
     },
-    5666666768: {
-        verified: true,
-        emojiStatus: "5251550383624443434",
-        premium: false
-    },
-    777000: {
+    591678038: {
         verified: true,
         emojiStatus: null,
         premium: false
     },
-    7702440572: {
-        verified: false,
-        emojiStatus: null,
-        premium: true
-    }
 };
 
 const selectors = [
