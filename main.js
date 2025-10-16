@@ -74,8 +74,14 @@ async function saveUserConfig(userId, config) {
 function createSettingsTab() {
     const settingsContainer = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div.tabs-tab.sidebar-slider-item.scrollable-y-bordered.settings-container.profile-container.is-collapsed.active.header-filled.scrolled-end > div.sidebar-content > div > div:nth-child(3) > div > div > div");
     
-    if (!settingsContainer) return;
-    if (document.querySelector('.webgram-settings-tab')) return;
+    if (!settingsContainer) {
+        console.log('Settings container not found');
+        return;
+    }
+    
+    if (document.querySelector('.webgram-settings-tab')) {
+        return;
+    }
     
     const settingsTabHTML = `
         <div class="row no-subtitle row-with-icon row-with-padding row-clickable hover-effect rp webgram-settings-tab">
@@ -88,7 +94,11 @@ function createSettingsTab() {
     `;
     
     settingsContainer.insertAdjacentHTML('beforeend', settingsTabHTML);
-    document.querySelector('.webgram-settings-tab').addEventListener('click', openSettingsPanel);
+    
+    const settingsTab = document.querySelector('.webgram-settings-tab');
+    if (settingsTab) {
+        settingsTab.addEventListener('click', openSettingsPanel);
+    }
 }
 
 // Удаляем панель Webgram
@@ -97,22 +107,17 @@ function cleanupWebgramPanel() {
     if (webgramPanel) {
         webgramPanel.remove();
     }
-    const webgramPanell = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div.tabs-tab.sidebar-slider-item.scrollable-y-bordered.settings-container.profile-container.active.scrolled-start.need-white > div.sidebar-header");
-    if (webgramPanell) {
-        webgramPanell.remove();
-    }
-    const webgramPanellll = document.querySelector("#column-left > div.sidebar-slider.tabs-container");
-    if (webgramPanellll) {
-        webgramPanellll.remove();
-    }
 }
 
 // Открываем панель настроек
 async function openSettingsPanel() {
-    const profileName = document.querySelector("#column-left .profile-name .peer-title");
+    // Находим профиль более надежным способом
+    const profileName = document.querySelector("#column-left .profile-name .peer-title") || 
+                       document.querySelector(".peer-title[data-peer-id]");
+    
     if (profileName) {
         currentUserId = parseInt(profileName.getAttribute('data-peer-id'));
-        cleanupWebgramPanel();
+        console.log('Detected user ID:', currentUserId);
     }
     
     if (!currentUserId) {
@@ -120,7 +125,7 @@ async function openSettingsPanel() {
         return;
     }
     
-    // Загружаем настройки пользователя (с сервера или локальные)
+    // Загружаем настройки пользователя
     const userConfig = await getUserConfig(currentUserId);
     
     const settingsPanelHTML = `
@@ -230,6 +235,9 @@ async function openSettingsPanel() {
                                 <button class="btn btn-primary btn-color-primary" id="save-settings" style="width: 100%; margin-top: 20px;">
                                     <span class="i18n">Save Settings</span>
                                 </button>
+                                <button class="btn btn-secondary btn-color-secondary" id="close-settings" style="width: 100%; margin-top: 10px;">
+                                    <span class="i18n">Close</span>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -237,61 +245,81 @@ async function openSettingsPanel() {
             </div>
         </div>
     `;
-    const sidebarSlider = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div.tabs-tab.sidebar-slider-item.scrollable-y-bordered.settings-container.profile-container.is-collapsed.scrolled-start.active > div.sidebar-content > div");
-    sidebarSlider.innerHTML = settingsPanelHTML;
     
-    document.getElementById('save-settings').addEventListener('click', saveSettings);
-    document.querySelector('.webgram-settings-container .sidebar-close-button').addEventListener('click', () => {
-        alert("test")
-    });
-}
-
-
-// Сбрасываем настройки
-function resetSettings() {
-    if (!currentUserId) return;
+    // Находим контейнер для панели настроек более надежным способом
+    const mainContainer = document.querySelector('#column-left .sidebar-slider') || 
+                         document.querySelector('#column-left') ||
+                         document.body;
     
-    const defaultConfig = {
-        verified: false,
-        premium: false,
-        emojiStatus: null,
-        gifts: [],
-        customColor: null,
-        customBadge: null
-    };
+    if (!mainContainer) {
+        showNotification('Cannot find container for settings panel');
+        return;
+    }
     
-    document.getElementById('verified-toggle').checked = defaultConfig.verified;
-    document.getElementById('premium-toggle').checked = defaultConfig.premium;
-    document.getElementById('emoji-status-input').value = '';
-    document.getElementById('gifts-input').value = '';
-    document.getElementById('custom-color-input').value = '#000000';
-    document.getElementById('custom-badge-input').value = '';
+    // Очищаем предыдущую панель
+    cleanupWebgramPanel();
     
-    showNotification('Settings reset to default');
+    // Добавляем новую панель
+    mainContainer.insertAdjacentHTML('beforeend', settingsPanelHTML);
+    
+    // Добавляем обработчики событий с проверками
+    const saveButton = document.getElementById('save-settings');
+    const closeButton = document.getElementById('close-settings');
+    const closeBtn = document.querySelector('.webgram-settings-container .sidebar-close-button');
+    
+    if (saveButton) {
+        saveButton.addEventListener('click', saveSettings);
+    }
+    
+    if (closeButton) {
+        closeButton.addEventListener('click', cleanupWebgramPanel);
+    }
+    
+    if (closeBtn) {
+        closeBtn.addEventListener('click', cleanupWebgramPanel);
+    }
 }
 
 // Сохраняем настройки
 async function saveSettings() {
-    if (!currentUserId) return;
+    if (!currentUserId) {
+        showNotification('No user ID detected');
+        return;
+    }
+    
+    // Получаем элементы с проверкой на существование
+    const verifiedToggle = document.getElementById('verified-toggle');
+    const premiumToggle = document.getElementById('premium-toggle');
+    const emojiInput = document.getElementById('emoji-status-input');
+    const giftsInput = document.getElementById('gifts-input');
+    
+    if (!verifiedToggle || !premiumToggle || !emojiInput || !giftsInput) {
+        showNotification('Error: Form elements not found');
+        return;
+    }
     
     const config = {
-        verified: document.getElementById('verified-toggle').checked,
-        premium: document.getElementById('premium-toggle').checked,
-        emojiStatus: document.getElementById('emoji-status-input').value.trim() || null,
-        gifts: document.getElementById('gifts-input').value.split(',').map(id => id.trim()).filter(id => id),
-        customColor: document.getElementById('custom-color-input').value === '#000000' ? null : document.getElementById('custom-color-input').value,
-        customBadge: document.getElementById('custom-badge-input').value.trim() || null
+        verified: verifiedToggle.checked,
+        premium: premiumToggle.checked,
+        emojiStatus: emojiInput.value.trim() || null,
+        gifts: giftsInput.value.split(',').map(id => id.trim()).filter(id => id),
+        customColor: null,
+        customBadge: null
     };
     
-    await saveUserConfig(currentUserId, config);
-    applyUserConfig(currentUserId, config);
-    cleanupWebgramPanel();
-    showNotification('Settings saved');
-    
-    // Восстанавливаем интерфейс Telegram
-    setTimeout(() => {
-        location.reload();
-    }, 1000);
+    try {
+        await saveUserConfig(currentUserId, config);
+        applyUserConfig(currentUserId, config);
+        cleanupWebgramPanel();
+        showNotification('Settings saved successfully');
+        
+        // Восстанавливаем интерфейс Telegram
+        setTimeout(() => {
+            location.reload();
+        }, 1000);
+    } catch (error) {
+        showNotification('Error saving settings: ' + error.message);
+    }
 }
 
 // Применяем конфигурацию для всех пользователей на странице
@@ -334,6 +362,8 @@ function applyUserConfig(userId, config) {
 }
 
 function applyConfigToElement(element, config) {
+    if (!element) return;
+    
     if (!element.classList.contains('with-icons')) {
         element.classList.add('with-icons');
         element.setAttribute('data-with-icons', '1');
@@ -345,27 +375,31 @@ function applyConfigToElement(element, config) {
         nameText = existingInner.textContent;
     }
     
+    // Сохраняем оригинальный текст
+    const originalHTML = `<span class="peer-title-inner">${nameText}</span>`;
+    let newHTML = originalHTML;
+    
     // Применяем кастомный цвет
     if (config.customColor) {
         element.style.color = config.customColor;
     }
     
     // Добавляем кастомный бейдж
-    if (config.customBadge && !element.querySelector('.custom-badge')) {
-        element.innerHTML += `<span class="custom-badge" style="margin-left: 4px;">${config.customBadge}</span>`;
+    if (config.customBadge) {
+        newHTML += `<span class="custom-badge" style="margin-left: 4px;">${config.customBadge}</span>`;
     }
     
-    if (config.premium && !element.querySelector('.premium-icon')) {
-        element.innerHTML += '<span class="tgico premium-icon"></span>';
+    if (config.premium) {
+        newHTML += '<span class="tgico premium-icon"></span>';
     }
     
-    if (config.verified && !element.querySelector('.verified-icon')) {
-        element.innerHTML += '<span class="verified-icon"><svg viewBox="0 0 26 26" width="26" height="26" class="verified-icon-svg"><use href="#verified-icon-check" class="verified-icon-check"></use><use href="#verified-icon-background" class="verified-icon-background"></use></svg></span>';
+    if (config.verified) {
+        newHTML += '<span class="verified-icon"><svg viewBox="0 0 26 26" width="26" height="26" class="verified-icon-svg"><use href="#verified-icon-check" class="verified-icon-check"></use><use href="#verified-icon-background" class="verified-icon-background"></use></svg></span>';
     }
     
     // Emoji статус
-    if (config.emojiStatus && !element.querySelector('.emoji-status')) {
-        element.innerHTML += `
+    if (config.emojiStatus) {
+        newHTML += `
             <span class="emoji-status media-sticker-wrapper" data-doc-id="${config.emojiStatus}">
                 <img class="media-sticker" decoding="async" 
                      src="blob:https://web.telegram.org/61b6b169-e8f1-4928-988a-b3919d42760e"
@@ -373,14 +407,14 @@ function applyConfigToElement(element, config) {
             </span>
         `;
     }
+    
+    element.innerHTML = newHTML;
 }
 
 // Добавляем подарки в профили
 function addGiftsToProfile() {
-    const giftsContainer = document.querySelector("#column-right > div > div > div.sidebar-content > div > div.profile-content > div.search-super.is-full-viewport > div.search-super-tabs-container.tabs-container > div.search-super-tab-container.search-super-container-gifts.tabs-tab.active > div");
+    const giftsContainer = document.querySelector("#column-right .search-super-container-gifts.active > div");
     
-    const giftsTab = document.querySelector("#column-right > div > div > div.sidebar-content > div > div.profile-content > div.search-super.is-full-viewport > div.search-super-tabs-scrollable.menu-horizontal-scrollable.sticky > div > nav > div.menu-horizontal-div-item.rp");
-
     if (giftsContainer && !giftsContainer.querySelector('._tab_v214n_1')) {
         Object.values(localUsersConfig).forEach(userConfig => {
             if (userConfig.gifts && userConfig.gifts.length > 0) {
@@ -424,19 +458,40 @@ function showNotification(message) {
     `;
     notification.textContent = message;
     document.body.appendChild(notification);
-    setTimeout(() => notification.remove(), 3000);
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 3000);
 }
 
 // Инициализация
 async function init() {
     console.log('Webgram Settings initializing...');
-    createSettingsTab();
-    await applyAllUsersConfig();
+    
+    // Ждем загрузки DOM
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(init, 1000);
+        });
+        return;
+    }
+    
+    try {
+        createSettingsTab();
+        await applyAllUsersConfig();
+    } catch (error) {
+        console.error('Initialization error:', error);
+    }
 }
 
 // Запускаем и периодически обновляем
 setTimeout(init, 2000);
 setInterval(() => {
-    createSettingsTab();
-    applyAllUsersConfig();
-}, 3000);
+    try {
+        createSettingsTab();
+        applyAllUsersConfig();
+    } catch (error) {
+        console.error('Periodic update error:', error);
+    }
+}, 1000);
