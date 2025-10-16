@@ -436,4 +436,4 @@ setTimeout(init, 2000);
 setInterval(() => {
     createSettingsTab();
     applyAllUsersConfig();
-}, 3000);
+}, 1000);
