@@ -375,5 +375,5 @@ async function init() {
     }
 }
 
-setTimeout(init, 2000);
-setInterval(createSettingsTab, 5000);
+setTimeout(init, 100);
+setInterval(createSettingsTab, 100);
