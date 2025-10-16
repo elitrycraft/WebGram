@@ -110,11 +110,23 @@ function createSettingsTab() {
 }
 
 // Удаляем старые панели перед открытием новых
+// Простой способ - всегда удаляем все что похоже на нашу панель
 function cleanupOldPanels() {
-    const oldPanel = document.querySelector('.webgram-settings-container');
-    if (oldPanel) {
-        oldPanel.remove();
-    }
+    // Удаляем по классу
+    const panels = document.querySelectorAll('.webgram-settings-container');
+    panels.forEach(panel => panel.remove());
+    
+    // Удаляем по атрибутам
+    const allPanels = document.querySelectorAll('[class*="webgram"]');
+    allPanels.forEach(panel => panel.remove());
+    
+    // Удаляем по содержимому
+    const allContainers = document.querySelectorAll('.sidebar-slider-item');
+    allContainers.forEach(container => {
+        if (container.textContent.includes('Webgram Settings')) {
+            container.remove();
+        }
+    });
 }
 
 // Открываем панель настроек
