@@ -132,14 +132,18 @@ function addVerificationAndStatus() {
         });
     });
 
-    // Добавляем подарки в профиль
+    // Добавляем подарки в профиль если есть раздел
     addGiftsToProfile();
 }
 
 function addGiftsToProfile() {
+    // Проверяем есть ли контейнер для подарков
     const giftsContainer = document.querySelector("#column-right > div > div > div.sidebar-content > div > div.profile-content > div.search-super.is-full-viewport > div.search-super-tabs-container.tabs-container > div.search-super-tab-container.search-super-container-gifts.tabs-tab.active > div");
-    const giftsTab = document.querySelector("#column-right > div > div > div.sidebar-content > div > div.profile-content > div.search-super.is-full-viewport > div.search-super-tabs-scrollable.menu-horizontal-scrollable.sticky > div > nav > div.menu-horizontal-div-item.rp.active");
+    
+    // Проверяем есть ли вкладка подарков
+    const giftsTab = document.querySelector("#column-right > div > div > div.sidebar-content > div > div.profile-content > div.search-super.is-full-viewport > div.search-super-tabs-scrollable.menu-horizontal-scrollable.sticky > div > nav > div.menu-horizontal-div-item.rp");
 
+    // Добавляем подарки только если есть контейнер и нет подарков
     if (giftsContainer && !giftsContainer.querySelector('._tab_v214n_1')) {
         Object.values(usersConfig).forEach(userConfig => {
             if (userConfig.gifts && userConfig.gifts.length > 0) {
@@ -166,6 +170,7 @@ function addGiftsToProfile() {
         });
     }
 
+    // Добавляем подарки во вкладку только если есть вкладка и нет подарков
     if (giftsTab && !giftsTab.querySelector('.search-super-pinned-gifts')) {
         Object.values(usersConfig).forEach(userConfig => {
             if (userConfig.gifts && userConfig.gifts.length > 0) {
@@ -173,7 +178,7 @@ function addGiftsToProfile() {
                     const giftTabHTML = `
                         <div class="search-super-pinned-gifts">
                             <div data-doc-id="${giftId}" class="media-sticker-wrapper">
-                                <img class="media-sticker" src="blob:https://web.telegram.org/5d1e53c1-aefc-45d3-a7fd-1c898e264e54">
+                                <img class="media-sticker" decoding="async" src="blob:https://web.telegram.org/77ba17f4-af0d-4e8d-9834-59cad1aec979">
                             </div>
                         </div>
                     `;
@@ -255,4 +260,4 @@ function configureUser(userId, config) {
 }
 
 addVerificationAndStatus();
-setInterval(addVerificationAndStatus, 1000);
+setInterval(addVerificationAndStatus, 2000);
