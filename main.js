@@ -241,7 +241,7 @@ async function openSettingsPanel() {
             </div>
         </div>
     `;
-    const sidebarSlider = document.querySelector("#column-left > div.sidebar-slider.tabs-container");
+    const sidebarSlider = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div.tabs-tab.sidebar-slider-item.scrollable-y-bordered.settings-container.profile-container.is-collapsed.scrolled-start.active > div.sidebar-content > div");
     sidebarSlider.innerHTML = settingsPanelHTML;
     
     document.getElementById('save-settings').addEventListener('click', saveSettings);
