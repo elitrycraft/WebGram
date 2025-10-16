@@ -241,7 +241,7 @@ async function openSettingsPanel() {
             </div>
         </div>
     `;
-    
+    cleanupWebgramPanel()
     const sidebarSlider = document.querySelector("#column-left > div.sidebar-slider.tabs-container");
     sidebarSlider.insertAdjacentHTML('beforeend', settingsPanelHTML);
     
