@@ -101,8 +101,8 @@ function cleanupWebgramPanel() {
 
 // Открываем панель настроек
 async function openSettingsPanel() {
+    cleanupWebgramPanel();
     
-    // Получаем ID пользователя
     const profileName = document.querySelector("#column-left .profile-name .peer-title");
     if (profileName) {
         currentUserId = parseInt(profileName.getAttribute('data-peer-id'));
@@ -113,19 +113,13 @@ async function openSettingsPanel() {
         return;
     }
     
-    // УДАЛЯЕМ ПАНЕЛЬ TELEGRAM ПОСЛЕ ПОЛУЧЕНИЯ ID
-    const telegramPanel = document.querySelector("#column-left > div.sidebar-slider.tabs-container");
-    if (telegramPanel) {
-        telegramPanel.remove();
-    }
-    
+    // Загружаем настройки пользователя (с сервера или локальные)
     const userConfig = await getUserConfig(currentUserId);
     
-    // Создаем панель в стиле Telegram
     const settingsPanelHTML = `
         <div class="tabs-tab sidebar-slider-item scrolled-start scrollable-y-bordered webgram-settings-container active">
             <div class="sidebar-header">
-                <button class="btn-icon sidebar-close-button" id="webgram-close-button">
+                <button class="btn-icon sidebar-close-button">
                     <span class="tgico button-icon"></span>
                 </button>
                 <div class="sidebar-header__title">
@@ -138,7 +132,7 @@ async function openSettingsPanel() {
                         <div class="sidebar-left-section">
                             <div class="sidebar-left-section-content">
                                 <div class="sidebar-left-h2 sidebar-left-section-name i18n">User ID: ${currentUserId}</div>
-                                <div class="sidebar-left-section-caption i18n">${Object.keys(userConfig).length > 0 ? 'Server configuration' : 'Local configuration'}</div>
+                                <div class="sidebar-left-section-caption i18n">Config: ${Object.keys(userConfig).length > 0 ? 'Server' : 'Local'}</div>
                             </div>
                         </div>
                     </div>
@@ -147,7 +141,7 @@ async function openSettingsPanel() {
                         <div class="sidebar-left-section">
                             <hr>
                             <div class="sidebar-left-section-content">
-                                <div class="sidebar-left-h2 sidebar-left-section-name i18n">Profile Badges</div>
+                                <div class="sidebar-left-h2 sidebar-left-section-name i18n">Verification</div>
                                 <label class="row no-subtitle row-with-toggle row-with-icon row-with-padding row-clickable hover-effect rp">
                                     <div class="c-ripple"></div>
                                     <div class="row-row row-title-row">
@@ -194,14 +188,13 @@ async function openSettingsPanel() {
                                 <div class="row no-subtitle row-with-padding row-clickable hover-effect rp">
                                     <div class="c-ripple"></div>
                                     <div class="row-title" dir="auto">
-                                        <span class="i18n">Status Document ID</span>
+                                        <span class="i18n">Emoji Status ID</span>
                                     </div>
                                     <div class="row-title row-title-right row-title-right-secondary">
-                                        <input type="text" id="emoji-status-input" placeholder="Enter document ID" value="${userConfig.emojiStatus || ''}" style="border: none; background: transparent; text-align: right; color: var(--secondary-text-color); width: 150px;">
+                                        <input type="text" id="emoji-status-input" placeholder="Enter doc_id" value="${userConfig.emojiStatus || ''}" style="border: none; background: transparent; text-align: right; color: var(--secondary-text-color); width: 150px;">
                                     </div>
                                 </div>
                             </div>
-                            <div class="sidebar-left-section-content sidebar-left-section-caption i18n">Enter the document ID of the emoji status sticker</div>
                         </div>
                     </div>
                     
@@ -213,38 +206,10 @@ async function openSettingsPanel() {
                                 <div class="row no-subtitle row-with-padding row-clickable hover-effect rp">
                                     <div class="c-ripple"></div>
                                     <div class="row-title" dir="auto">
-                                        <span class="i18n">Gift Document IDs</span>
+                                        <span class="i18n">Gift IDs (comma separated)</span>
                                     </div>
                                     <div class="row-title row-title-right row-title-right-secondary">
-                                        <input type="text" id="gifts-input" placeholder="ID1, ID2, ..." value="${userConfig.gifts ? userConfig.gifts.join(', ') : ''}" style="border: none; background: transparent; text-align: right; color: var(--secondary-text-color); width: 150px;">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="sidebar-left-section-content sidebar-left-section-caption i18n">Comma-separated list of gift document IDs</div>
-                        </div>
-                    </div>
-
-                    <div class="sidebar-left-section-container">
-                        <div class="sidebar-left-section">
-                            <hr>
-                            <div class="sidebar-left-section-content">
-                                <div class="sidebar-left-h2 sidebar-left-section-name i18n">Appearance</div>
-                                <div class="row no-subtitle row-with-padding row-clickable hover-effect rp">
-                                    <div class="c-ripple"></div>
-                                    <div class="row-title" dir="auto">
-                                        <span class="i18n">Name Color</span>
-                                    </div>
-                                    <div class="row-title row-title-right row-title-right-secondary">
-                                        <input type="color" id="custom-color-input" value="${userConfig.customColor || '#000000'}" style="border: none; background: transparent; width: 30px; height: 30px; border-radius: 4px;">
-                                    </div>
-                                </div>
-                                <div class="row no-subtitle row-with-padding row-clickable hover-effect rp">
-                                    <div class="c-ripple"></div>
-                                    <div class="row-title" dir="auto">
-                                        <span class="i18n">Custom Badge</span>
-                                    </div>
-                                    <div class="row-title row-title-right row-title-right-secondary">
-                                        <input type="text" id="custom-badge-input" placeholder="Emoji or text" value="${userConfig.customBadge || ''}" style="border: none; background: transparent; text-align: right; color: var(--secondary-text-color); width: 120px;">
+                                        <input type="text" id="gifts-input" placeholder="gift1,gift2,..." value="${userConfig.gifts ? userConfig.gifts.join(',') : ''}" style="border: none; background: transparent; text-align: right; color: var(--secondary-text-color); width: 150px;">
                                     </div>
                                 </div>
                             </div>
@@ -255,11 +220,8 @@ async function openSettingsPanel() {
                         <div class="sidebar-left-section">
                             <hr>
                             <div class="sidebar-left-section-content">
-                                <button class="btn btn-primary btn-color-primary" id="save-settings" style="width: 100%; margin-top: 10px;">
-                                    <span class="i18n">Save Changes</span>
-                                </button>
-                                <button class="btn btn-secondary" id="reset-settings" style="width: 100%; margin-top: 8px;">
-                                    <span class="i18n">Reset to Default</span>
+                                <button class="btn btn-primary btn-color-primary" id="save-settings" style="width: 100%; margin-top: 20px;">
+                                    <span class="i18n">Save Settings</span>
                                 </button>
                             </div>
                         </div>
@@ -268,19 +230,16 @@ async function openSettingsPanel() {
             </div>
         </div>
     `;
-    cleanupWebgramPanel();
-    // Вставляем панель в body
-    document.body.insertAdjacentHTML('beforeend', settingsPanelHTML);
     
-    // Обработчики событий
+    const sidebarSlider = document.querySelector("#column-left > div.sidebar-slider.tabs-container");
+    sidebarSlider.insertAdjacentHTML('beforeend', settingsPanelHTML);
+    
     document.getElementById('save-settings').addEventListener('click', saveSettings);
-    document.getElementById('reset-settings').addEventListener('click', resetSettings);
-    document.getElementById('webgram-close-button').addEventListener('click', () => {
-        cleanupWebgramPanel();
-        // Восстанавливаем интерфейс Telegram
-        location.reload();
+    document.querySelector('.webgram-settings-container .sidebar-close-button').addEventListener('click', () => {
+        document.querySelector('.webgram-settings-container').remove();
     });
 }
+
 
 // Сбрасываем настройки
 function resetSettings() {
