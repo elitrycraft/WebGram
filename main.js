@@ -113,7 +113,7 @@ function createSettingsTab() {
 // Простой способ - всегда удаляем все что похоже на нашу панель
 function cleanupOldPanels() {
     // Удаляем по классу
-    const panels = document.querySelectorAll('.webgram-settings-container');
+    const panels = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div.tabs-tab.sidebar-slider-item.scrolled-start.scrolled-end.scrollable-y-bordered.settings-container.profile-container.is-collapsed.active > div.sidebar-content")
     panels.forEach(panel => panel.remove());
     
     // Удаляем по атрибутам
