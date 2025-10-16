@@ -112,21 +112,14 @@ function createSettingsTab() {
 // Удаляем старые панели перед открытием новых
 // Простой способ - всегда удаляем все что похоже на нашу панель
 function cleanupOldPanels() {
-    // Удаляем по классу
-    const panels = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div.tabs-tab.sidebar-slider-item.scrolled-start.scrolled-end.scrollable-y-bordered.settings-container.profile-container.is-collapsed.active > div.sidebar-content")
-    panels.forEach(panel => panel.remove());
-    
-    // Удаляем по атрибутам
-    const allPanels = document.querySelectorAll('[class*="webgram"]');
-    allPanels.forEach(panel => panel.remove());
-    
-    // Удаляем по содержимому
-    const allContainers = document.querySelectorAll('.sidebar-slider-item');
-    allContainers.forEach(container => {
-        if (container.textContent.includes('Webgram Settings')) {
-            container.remove();
-        }
-    });
+    const oldPanel = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div.tabs-tab.sidebar-slider-item.scrollable-y-bordered.settings-container.profile-container.is-collapsed.active.header-filled.scrolled-end > div.sidebar-header");
+    if (oldPanel) {
+        oldPanel.remove();
+    }
+    const oldPanell = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div.tabs-tab.sidebar-slider-item.scrollable-y-bordered.settings-container.profile-container.is-collapsed.active.header-filled.scrolled-end > div.sidebar-content");
+    if (oldPanell) {
+        oldPanell.remove();
+    }
 }
 
 // Открываем панель настроек
