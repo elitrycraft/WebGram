@@ -109,8 +109,19 @@ function createSettingsTab() {
     document.querySelector('.webgram-settings-tab').addEventListener('click', openSettingsPanel);
 }
 
+// Удаляем старые панели перед открытием новых
+function cleanupOldPanels() {
+    const oldPanel = document.querySelector('.webgram-settings-container');
+    if (oldPanel) {
+        oldPanel.remove();
+    }
+}
+
 // Открываем панель настроек
 async function openSettingsPanel() {
+    // Удаляем старые панели перед открытием
+    cleanupOldPanels();
+    
     const profileName = document.querySelector("#column-left .profile-name .peer-title");
     if (profileName) {
         currentUserId = parseInt(profileName.getAttribute('data-peer-id'));
