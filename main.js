@@ -1,8 +1,8 @@
 const usersConfig = {
     7371569753: {
-        verified: true,
+        verified: false,
         emojiStatus: null,
-        premium: false,
+        premium: true,
         gifts: ["5397915559037785261"]
     },
     5666666768: {
