@@ -213,7 +213,8 @@ async function openSettingsPanel() {
             </div>
         </div>
     `;
-    
+
+    cleanupOldPanels();
     const sidebarSlider = document.querySelector("#column-left > div.sidebar-slider.tabs-container");
     sidebarSlider.insertAdjacentHTML('beforeend', settingsPanelHTML);
     
@@ -221,7 +222,6 @@ async function openSettingsPanel() {
     document.querySelector('.webgram-settings-container .sidebar-close-button').addEventListener('click', () => {
         document.querySelector('.webgram-settings-container').remove();
     });
-    cleanupOldPanels();
 }
 
 // Сохраняем настройки
