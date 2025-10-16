@@ -21,7 +21,7 @@ const usersConfig = {
     },
     6975201668: {
         verified: true,
-        emojiStatus: null,
+        emojiStatus: "5251550383624443434",
         premium: false
     },
     591678038: {
