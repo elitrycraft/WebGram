@@ -4,62 +4,6 @@ let currentUserId = null;
 
 // Локальная конфигурация как fallback
 const localUsersConfig = {
-    7371569753: {
-        verified: true,
-        emojiStatus: null,
-        premium: false,
-        gifts: ["5397915559037785261"],
-        customColor: "#ff6b6b",
-        customBadge: "🌟"
-    },
-    5666666768: {
-        verified: true,
-        emojiStatus: "5251550383624443434",
-        premium: false,
-        gifts: ["5397915559037785261"],
-        customColor: "#4ecdc4",
-        customBadge: "⚡"
-    },
-    777000: {
-        verified: true,
-        emojiStatus: null,
-        premium: false,
-        gifts: [],
-        customColor: "#45b7d1",
-        customBadge: "🔵"
-    },
-    7702440572: {
-        verified: false,
-        emojiStatus: null,
-        premium: true,
-        gifts: [],
-        customColor: "#96ceb4",
-        customBadge: "💎"
-    },
-    6975201668: {
-        verified: true,
-        emojiStatus: null,
-        premium: false,
-        gifts: [],
-        customColor: "#feca57",
-        customBadge: "🚀"
-    },
-    591678038: {
-        verified: true,
-        emojiStatus: null,
-        premium: false,
-        gifts: [],
-        customColor: "#ff9ff3",
-        customBadge: "❤️"
-    },
-    5434504334: {
-        verified: true,
-        emojiStatus: null,
-        premium: false,
-        gifts: [],
-        customColor: "#54a0ff",
-        customBadge: "👑"
-    }
 };
 
 // Селекторы для применения конфигурации
@@ -123,21 +67,19 @@ function createSettingsTab() {
     document.querySelector('.webgram-settings-tab').addEventListener('click', openSettingsPanel);
 }
 
-// Удаляем старые панели
-function cleanupOldPanels() {
-    const oldPanel = document.querySelector(".webgram-settings-container");
-    if (oldPanel) {
-        oldPanel.remove();
+// Удаляем панель Webgram
+function cleanupWebgramPanel() {
+    const webgramPanel = document.querySelector(".webgram-settings-container");
+    if (webgramPanel) {
+        webgramPanel.remove();
     }
 }
 
 // Открываем панель настроек
 async function openSettingsPanel() {
-    cleanupOldPanels();
+    cleanupWebgramPanel();
     
-    // Ждем немного чтобы Telegram закрыл свои панели
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
+    // Получаем ID пользователя
     const profileName = document.querySelector("#column-left .profile-name .peer-title");
     if (profileName) {
         currentUserId = parseInt(profileName.getAttribute('data-peer-id'));
@@ -148,16 +90,23 @@ async function openSettingsPanel() {
         return;
     }
     
+    // УДАЛЯЕМ ПАНЕЛЬ TELEGRAM ПОСЛЕ ПОЛУЧЕНИЯ ID
+    const telegramPanel = document.querySelector("#column-left > div.sidebar-slider.tabs-container");
+    if (telegramPanel) {
+        telegramPanel.remove();
+    }
+    
     const userConfig = await getUserConfig(currentUserId);
     
+    // Создаем панель в стиле Telegram
     const settingsPanelHTML = `
         <div class="tabs-tab sidebar-slider-item scrolled-start scrollable-y-bordered webgram-settings-container active">
             <div class="sidebar-header">
-                <button class="btn-icon sidebar-close-button">
+                <button class="btn-icon sidebar-close-button" id="webgram-close-button">
                     <span class="tgico button-icon"></span>
                 </button>
                 <div class="sidebar-header__title">
-                    <span class="i18n">Webgram Premium</span>
+                    <span class="i18n">Webgram Settings</span>
                 </div>
             </div>
             <div class="sidebar-content">
@@ -165,8 +114,8 @@ async function openSettingsPanel() {
                     <div class="sidebar-left-section-container">
                         <div class="sidebar-left-section">
                             <div class="sidebar-left-section-content">
-                                <div class="sidebar-left-h2 sidebar-left-section-name i18n">👤 User ID: ${currentUserId}</div>
-                                <div class="sidebar-left-section-caption i18n">${Object.keys(userConfig).length > 0 ? '🟢 Server Config' : '🟡 Local Config'}</div>
+                                <div class="sidebar-left-h2 sidebar-left-section-name i18n">User ID: ${currentUserId}</div>
+                                <div class="sidebar-left-section-caption i18n">${Object.keys(userConfig).length > 0 ? 'Server configuration' : 'Local configuration'}</div>
                             </div>
                         </div>
                     </div>
@@ -175,7 +124,7 @@ async function openSettingsPanel() {
                         <div class="sidebar-left-section">
                             <hr>
                             <div class="sidebar-left-section-content">
-                                <div class="sidebar-left-h2 sidebar-left-section-name i18n">🎨 Customization</div>
+                                <div class="sidebar-left-h2 sidebar-left-section-name i18n">Profile Badges</div>
                                 <label class="row no-subtitle row-with-toggle row-with-icon row-with-padding row-clickable hover-effect rp">
                                     <div class="c-ripple"></div>
                                     <div class="row-row row-title-row">
@@ -218,18 +167,18 @@ async function openSettingsPanel() {
                         <div class="sidebar-left-section">
                             <hr>
                             <div class="sidebar-left-section-content">
-                                <div class="sidebar-left-h2 sidebar-left-section-name i18n">😊 Emoji Status</div>
+                                <div class="sidebar-left-h2 sidebar-left-section-name i18n">Emoji Status</div>
                                 <div class="row no-subtitle row-with-padding row-clickable hover-effect rp">
                                     <div class="c-ripple"></div>
                                     <div class="row-title" dir="auto">
-                                        <span class="i18n">Status ID</span>
+                                        <span class="i18n">Status Document ID</span>
                                     </div>
                                     <div class="row-title row-title-right row-title-right-secondary">
-                                        <input type="text" id="emoji-status-input" placeholder="doc_id" value="${userConfig.emojiStatus || ''}" style="border: none; background: transparent; text-align: right; color: var(--secondary-text-color); width: 150px;">
+                                        <input type="text" id="emoji-status-input" placeholder="Enter document ID" value="${userConfig.emojiStatus || ''}" style="border: none; background: transparent; text-align: right; color: var(--secondary-text-color); width: 150px;">
                                     </div>
                                 </div>
-                                <div class="sidebar-left-section-caption i18n">Use real sticker document IDs</div>
                             </div>
+                            <div class="sidebar-left-section-content sidebar-left-section-caption i18n">Enter the document ID of the emoji status sticker</div>
                         </div>
                     </div>
                     
@@ -237,17 +186,18 @@ async function openSettingsPanel() {
                         <div class="sidebar-left-section">
                             <hr>
                             <div class="sidebar-left-section-content">
-                                <div class="sidebar-left-h2 sidebar-left-section-name i18n">🎁 Gifts & Rewards</div>
+                                <div class="sidebar-left-h2 sidebar-left-section-name i18n">Gifts</div>
                                 <div class="row no-subtitle row-with-padding row-clickable hover-effect rp">
                                     <div class="c-ripple"></div>
                                     <div class="row-title" dir="auto">
-                                        <span class="i18n">Gift IDs</span>
+                                        <span class="i18n">Gift Document IDs</span>
                                     </div>
                                     <div class="row-title row-title-right row-title-right-secondary">
-                                        <input type="text" id="gifts-input" placeholder="id1,id2,..." value="${userConfig.gifts ? userConfig.gifts.join(',') : ''}" style="border: none; background: transparent; text-align: right; color: var(--secondary-text-color); width: 150px;">
+                                        <input type="text" id="gifts-input" placeholder="ID1, ID2, ..." value="${userConfig.gifts ? userConfig.gifts.join(', ') : ''}" style="border: none; background: transparent; text-align: right; color: var(--secondary-text-color); width: 150px;">
                                     </div>
                                 </div>
                             </div>
+                            <div class="sidebar-left-section-content sidebar-left-section-caption i18n">Comma-separated list of gift document IDs</div>
                         </div>
                     </div>
 
@@ -255,14 +205,14 @@ async function openSettingsPanel() {
                         <div class="sidebar-left-section">
                             <hr>
                             <div class="sidebar-left-section-content">
-                                <div class="sidebar-left-h2 sidebar-left-section-name i18n">🌈 Advanced</div>
+                                <div class="sidebar-left-h2 sidebar-left-section-name i18n">Appearance</div>
                                 <div class="row no-subtitle row-with-padding row-clickable hover-effect rp">
                                     <div class="c-ripple"></div>
                                     <div class="row-title" dir="auto">
-                                        <span class="i18n">Custom Color</span>
+                                        <span class="i18n">Name Color</span>
                                     </div>
                                     <div class="row-title row-title-right row-title-right-secondary">
-                                        <input type="color" id="custom-color-input" value="${userConfig.customColor || '#4CAF50'}" style="border: none; background: transparent; width: 40px; height: 20px;">
+                                        <input type="color" id="custom-color-input" value="${userConfig.customColor || '#000000'}" style="border: none; background: transparent; width: 30px; height: 30px; border-radius: 4px;">
                                     </div>
                                 </div>
                                 <div class="row no-subtitle row-with-padding row-clickable hover-effect rp">
@@ -271,7 +221,7 @@ async function openSettingsPanel() {
                                         <span class="i18n">Custom Badge</span>
                                     </div>
                                     <div class="row-title row-title-right row-title-right-secondary">
-                                        <input type="text" id="custom-badge-input" placeholder="🌟" value="${userConfig.customBadge || ''}" style="border: none; background: transparent; text-align: right; color: var(--secondary-text-color); width: 80px;">
+                                        <input type="text" id="custom-badge-input" placeholder="Emoji or text" value="${userConfig.customBadge || ''}" style="border: none; background: transparent; text-align: right; color: var(--secondary-text-color); width: 120px;">
                                     </div>
                                 </div>
                             </div>
@@ -282,22 +232,12 @@ async function openSettingsPanel() {
                         <div class="sidebar-left-section">
                             <hr>
                             <div class="sidebar-left-section-content">
-                                <button class="btn btn-primary btn-color-primary" id="save-settings" style="width: 100%; margin-top: 20px; background: linear-gradient(45deg, #FF6B6B, #4ECDC4); border: none;">
-                                    <span class="i18n" style="font-weight: bold;">💾 Save All Settings</span>
+                                <button class="btn btn-primary btn-color-primary" id="save-settings" style="width: 100%; margin-top: 10px;">
+                                    <span class="i18n">Save Changes</span>
                                 </button>
-                                <button class="btn btn-secondary" id="reset-settings" style="width: 100%; margin-top: 10px;">
-                                    <span class="i18n">🔄 Reset to Default</span>
+                                <button class="btn btn-secondary" id="reset-settings" style="width: 100%; margin-top: 8px;">
+                                    <span class="i18n">Reset to Default</span>
                                 </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="sidebar-left-section-container">
-                        <div class="sidebar-left-section">
-                            <div class="sidebar-left-section-content">
-                                <div class="sidebar-left-section-caption i18n" style="text-align: center; color: #888;">
-                                    ✨ Webgram Premium v2.0 ✨
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -306,13 +246,16 @@ async function openSettingsPanel() {
         </div>
     `;
     
-    const sidebarSlider = document.querySelector("#column-left > div.sidebar-slider.tabs-container");
-    sidebarSlider.insertAdjacentHTML('beforeend', settingsPanelHTML);
+    // Вставляем панель в body
+    document.body.insertAdjacentHTML('beforeend', settingsPanelHTML);
     
+    // Обработчики событий
     document.getElementById('save-settings').addEventListener('click', saveSettings);
     document.getElementById('reset-settings').addEventListener('click', resetSettings);
-    document.querySelector('.webgram-settings-container .sidebar-close-button').addEventListener('click', () => {
-        document.querySelector('.webgram-settings-container').remove();
+    document.getElementById('webgram-close-button').addEventListener('click', () => {
+        cleanupWebgramPanel();
+        // Восстанавливаем интерфейс Telegram
+        location.reload();
     });
 }
 
@@ -325,18 +268,18 @@ function resetSettings() {
         premium: false,
         emojiStatus: null,
         gifts: [],
-        customColor: "#4CAF50",
-        customBadge: ""
+        customColor: null,
+        customBadge: null
     };
     
     document.getElementById('verified-toggle').checked = defaultConfig.verified;
     document.getElementById('premium-toggle').checked = defaultConfig.premium;
     document.getElementById('emoji-status-input').value = '';
     document.getElementById('gifts-input').value = '';
-    document.getElementById('custom-color-input').value = defaultConfig.customColor;
+    document.getElementById('custom-color-input').value = '#000000';
     document.getElementById('custom-badge-input').value = '';
     
-    showNotification('Settings reset to default!');
+    showNotification('Settings reset to default');
 }
 
 // Сохраняем настройки
@@ -348,14 +291,19 @@ async function saveSettings() {
         premium: document.getElementById('premium-toggle').checked,
         emojiStatus: document.getElementById('emoji-status-input').value.trim() || null,
         gifts: document.getElementById('gifts-input').value.split(',').map(id => id.trim()).filter(id => id),
-        customColor: document.getElementById('custom-color-input').value,
-        customBadge: document.getElementById('custom-badge-input').value.trim()
+        customColor: document.getElementById('custom-color-input').value === '#000000' ? null : document.getElementById('custom-color-input').value,
+        customBadge: document.getElementById('custom-badge-input').value.trim() || null
     };
     
     await saveUserConfig(currentUserId, config);
     applyUserConfig(currentUserId, config);
-    document.querySelector('.webgram-settings-container').remove();
-    showNotification('✨ Settings saved successfully!');
+    cleanupWebgramPanel();
+    showNotification('Settings saved');
+    
+    // Восстанавливаем интерфейс Telegram
+    setTimeout(() => {
+        location.reload();
+    }, 1000);
 }
 
 // Применяем конфигурацию для всех пользователей на странице
@@ -418,7 +366,7 @@ function applyConfigToElement(element, config) {
     
     // Добавляем кастомный бейдж
     if (config.customBadge && !element.querySelector('.custom-badge')) {
-        element.innerHTML += `<span class="custom-badge" style="margin-left: 4px; font-size: 14px;">${config.customBadge}</span>`;
+        element.innerHTML += `<span class="custom-badge" style="margin-left: 4px;">${config.customBadge}</span>`;
     }
     
     if (config.premium && !element.querySelector('.premium-icon')) {
@@ -429,15 +377,13 @@ function applyConfigToElement(element, config) {
         element.innerHTML += '<span class="verified-icon"><svg viewBox="0 0 26 26" width="26" height="26" class="verified-icon-svg"><use href="#verified-icon-check" class="verified-icon-check"></use><use href="#verified-icon-background" class="verified-icon-background"></use></svg></span>';
     }
     
-    // Исправляем emoji статус - используем правильный формат
+    // Emoji статус
     if (config.emojiStatus && !element.querySelector('.emoji-status')) {
-        // Создаем правильную структуру как в Telegram
         element.innerHTML += `
             <span class="emoji-status media-sticker-wrapper" data-doc-id="${config.emojiStatus}">
                 <img class="media-sticker" decoding="async" 
-                     src="https://api.telegram.org/file/bot<token>/stickers/${config.emojiStatus}.webp"
-                     onerror="this.style.display='none'"
-                     style="width: 16px; height: 16px; vertical-align: middle;">
+                     src="blob:https://web.telegram.org/61b6b169-e8f1-4928-988a-b3919d42760e"
+                     style="width: 16px; height: 16px;">
             </span>
         `;
     }
@@ -474,26 +420,6 @@ function addGiftsToProfile() {
             }
         });
     }
-
-    if (giftsTab && !giftsTab.querySelector('.search-super-pinned-gifts')) {
-        Object.values(localUsersConfig).forEach(userConfig => {
-            if (userConfig.gifts && userConfig.gifts.length > 0) {
-                userConfig.gifts.forEach(giftId => {
-                    const giftTabHTML = `
-                        <div class="search-super-pinned-gifts">
-                            <div data-doc-id="${giftId}" class="media-sticker-wrapper">
-                                <img class="media-sticker" decoding="async" src="blob:https://web.telegram.org/77ba17f4-af0d-4e8d-9834-59cad1aec979">
-                            </div>
-                        </div>
-                    `;
-                    const spanElement = giftsTab.querySelector('.menu-horizontal-div-item-span');
-                    if (spanElement) {
-                        spanElement.innerHTML += giftTabHTML;
-                    }
-                });
-            }
-        });
-    }
 }
 
 function showNotification(message) {
@@ -502,15 +428,13 @@ function showNotification(message) {
         position: fixed;
         top: 20px;
         right: 20px;
-        background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+        background: var(--primary-color);
         color: white;
         padding: 12px 20px;
-        border-radius: 12px;
+        border-radius: 8px;
         z-index: 10000;
         font-size: 14px;
-        font-weight: bold;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-        border: 2px solid rgba(255,255,255,0.3);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     `;
     notification.textContent = message;
     document.body.appendChild(notification);
@@ -519,7 +443,7 @@ function showNotification(message) {
 
 // Инициализация
 async function init() {
-    console.log('🎨 Webgram Premium v2.0 initializing...');
+    console.log('Webgram Settings initializing...');
     createSettingsTab();
     await applyAllUsersConfig();
 }
@@ -529,4 +453,4 @@ setTimeout(init, 2000);
 setInterval(() => {
     createSettingsTab();
     applyAllUsersConfig();
-}, 1000);
+}, 3000);
