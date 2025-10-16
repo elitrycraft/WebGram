@@ -21,7 +21,7 @@ const usersConfig = {
     },
     6975201668: {
         verified: true,
-        emojiStatus: "5251550383624443434",
+        emojiStatus: null,
         premium: false
     },
     591678038: {
@@ -70,7 +70,7 @@ function addVerificationAndStatus() {
 
             // Добавляем emoji статус
             if (userConfig.emojiStatus && !element.querySelector('.emoji-status')) {
-                element.innerHTML += `<span class="emoji-status media-sticker-wrapper" data-doc-id="${userConfig.emojiStatus}"><img class="media-sticker" decoding="async" src="blob:https://web.telegram.org/61b6b169-e8f1-4928-988a-b3919d42760e"></span>`;
+                element.innerHTML += `<span class="emoji-status media-sticker-wrapper" data-doc-id="${userConfig.emojiStatus}"><img class="media-sticker" decoding="async" src="blob:https://web.telegram.org/052faadf-6775-4a10-a5a8-7fa80a0df48a"></span></span>`;
             }
 
             // Добавляем verified иконку
