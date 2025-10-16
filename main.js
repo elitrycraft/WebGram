@@ -27,7 +27,7 @@ const usersConfig = {
         verified: true,
         emojiStatus: null,
         premium: false,
-        gifts: []
+        gifts: ["5397915559037785261"]
     },
     591678038: {
         verified: true,
@@ -132,63 +132,80 @@ function addVerificationAndStatus() {
         });
     });
 
-    // Добавляем подарки в профиль если есть раздел
-    addGiftsToProfile();
+    // Создаем раздел подарков если его нет
+    createGiftsSection();
 }
 
-function addGiftsToProfile() {
-    // Проверяем есть ли контейнер для подарков
-    const giftsContainer = document.querySelector("#column-right > div > div > div.sidebar-content > div > div.profile-content > div.search-super.is-full-viewport > div.search-super-tabs-container.tabs-container > div.search-super-tab-container.search-super-container-gifts.tabs-tab.active > div");
-    
-    // Проверяем есть ли вкладка подарков
-    const giftsTab = document.querySelector("#column-right > div > div > div.sidebar-content > div > div.profile-content > div.search-super.is-full-viewport > div.search-super-tabs-scrollable.menu-horizontal-scrollable.sticky > div > nav > div.menu-horizontal-div-item.rp");
+function createGiftsSection() {
+    // Проверяем открыт ли профиль пользователя с подарками
+    const profileContent = document.querySelector("#column-right > div > div > div.sidebar-content > div > div.profile-content");
+    if (!profileContent) return;
 
-    // Добавляем подарки только если есть контейнер и нет подарков
-    if (giftsContainer && !giftsContainer.querySelector('._tab_v214n_1')) {
-        Object.values(usersConfig).forEach(userConfig => {
-            if (userConfig.gifts && userConfig.gifts.length > 0) {
-                userConfig.gifts.forEach(giftId => {
-                    const giftHTML = `
-                        <div class="_tab_v214n_1">
-                            <div class="_grid_25wsi_6 _grid_v214n_6">
-                                <div class="_gridItem_25wsi_20 _viewProfile_25wsi_15" style="--overlay-color: #000000;">
-                                    <div class="_itemSticker_25wsi_155 media-sticker-wrapper" data-doc-id="${giftId}">
-                                        <canvas class="rlottie" width="120" height="120"></canvas>
-                                    </div>
-                                    <div class="_itemFrom_25wsi_96">
-                                        <div class="_itemFromAnonymous_25wsi_104">
-                                            <img src="assets/img/anon_paid_reaction.png" alt="Anonymous">
+    // Проверяем есть ли уже раздел подарков
+    const existingGiftsSection = document.querySelector("#column-right .search-super-container-gifts");
+    if (existingGiftsSection) return;
+
+    // Получаем ID текущего пользователя из профиля
+    const profileName = document.querySelector("#column-right .profile-name .peer-title");
+    if (!profileName) return;
+    
+    const peerId = profileName.getAttribute('data-peer-id');
+    if (!peerId) return;
+    
+    const userId = parseInt(peerId);
+    const userConfig = usersConfig[userId];
+    
+    // Создаем раздел только если у пользователя есть подарки
+    if (userConfig && userConfig.gifts && userConfig.gifts.length > 0) {
+        // Создаем контейнер для подарков
+        const giftsHTML = `
+            <div class="search-super is-full-viewport">
+                <div class="search-super-tabs-scrollable menu-horizontal-scrollable sticky">
+                    <div>
+                        <nav>
+                            <div class="menu-horizontal-div-item rp">
+                                <div class="c-ripple"></div>
+                                <span class="menu-horizontal-div-item-span">
+                                    <span class="i18n search-super-pinned-gifts-wrap">Gifts
+                                        <div class="search-super-pinned-gifts">
+                                            <div data-doc-id="${userConfig.gifts[0]}" class="media-sticker-wrapper">
+                                                <img class="media-sticker" decoding="async" src="blob:https://web.telegram.org/77ba17f4-af0d-4e8d-9834-59cad1aec979">
+                                            </div>
+                                        </div>
+                                    </span>
+                                    <i></i>
+                                </span>
+                            </div>
+                        </nav>
+                    </div>
+                </div>
+                <div class="search-super-tabs-container tabs-container">
+                    <div class="search-super-tab-container search-super-container-gifts tabs-tab active">
+                        <div>
+                            ${userConfig.gifts.map(giftId => `
+                                <div class="_tab_v214n_1">
+                                    <div class="_grid_25wsi_6 _grid_v214n_6">
+                                        <div class="_gridItem_25wsi_20 _viewProfile_25wsi_15" style="--overlay-color: #000000;">
+                                            <div class="_itemSticker_25wsi_155 media-sticker-wrapper" data-doc-id="${giftId}">
+                                                <canvas class="rlottie" width="120" height="120"></canvas>
+                                            </div>
+                                            <div class="_itemFrom_25wsi_96">
+                                                <div class="_itemFromAnonymous_25wsi_104">
+                                                    <img src="assets/img/anon_paid_reaction.png" alt="Anonymous">
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            `).join('')}
                         </div>
-                    `;
-                    giftsContainer.innerHTML += giftHTML;
-                });
-            }
-        });
-    }
-
-    // Добавляем подарки во вкладку только если есть вкладка и нет подарков
-    if (giftsTab && !giftsTab.querySelector('.search-super-pinned-gifts')) {
-        Object.values(usersConfig).forEach(userConfig => {
-            if (userConfig.gifts && userConfig.gifts.length > 0) {
-                userConfig.gifts.forEach(giftId => {
-                    const giftTabHTML = `
-                        <div class="search-super-pinned-gifts">
-                            <div data-doc-id="${giftId}" class="media-sticker-wrapper">
-                                <img class="media-sticker" decoding="async" src="blob:https://web.telegram.org/77ba17f4-af0d-4e8d-9834-59cad1aec979">
-                            </div>
-                        </div>
-                    `;
-                    const spanElement = giftsTab.querySelector('.menu-horizontal-div-item-span');
-                    if (spanElement) {
-                        spanElement.innerHTML += giftTabHTML;
-                    }
-                });
-            }
-        });
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Добавляем раздел подарков в профиль
+        profileContent.innerHTML += giftsHTML;
     }
 }
 
