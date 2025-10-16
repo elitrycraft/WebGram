@@ -1,14 +1,14 @@
 const usersConfig = {
     6975201668: {
-        verified: false,
+        verified: true,
         emojiStatus: null,
-        premium: true
+        premium: false
     },
     591678038: {
-        verified: false,
+        verified: true,
         emojiStatus: null,
-        premium: true
-    },
+        premium: false
+    }
 };
 
 const selectors = [
