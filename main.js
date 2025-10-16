@@ -73,9 +73,13 @@ function createSettingsTab() {
 
 // Удаляем старые панели
 function cleanupOldPanels() {
-    const oldPanel = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div.tabs-tab.sidebar-slider-item.scrolled-start.scrollable-y-bordered.settings-container.profile-container.is-collapsed.active");
+    const oldPanel = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div.tabs-tab.sidebar-slider-item.scrollable-y-bordered.settings-container.profile-container.is-collapsed.active.header-filled.scrolled-end > div.sidebar-header");
     if (oldPanel) {
         oldPanel.remove();
+    }
+    const oldPanell = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div.tabs-tab.sidebar-slider-item.scrollable-y-bordered.settings-container.profile-container.is-collapsed.active.header-filled.scrolled-end > div.sidebar-content");
+    if (oldPanell) {
+        oldPanell.remove();
     }
 }
 
@@ -92,8 +96,15 @@ async function openSettingsPanel() {
         return;
     }
     
-    // Загружаем настройки пользователя (с сервера или локальные)
-    const userConfig = await getUserConfig(currentUserId);
+    // Загружаем настройки из разных endpoint'ов
+    const [userConfig, profileConfig, settingsConfig] = await Promise.all([
+        getUserConfig(currentUserId),
+        getProfileConfig(currentUserId),
+        getSettingsConfig(currentUserId)
+    ]);
+    
+    // Объединяем конфиги
+    const mergedConfig = { ...userConfig, ...profileConfig, ...settingsConfig };
     
     const settingsPanelHTML = `
         <div class="tabs-tab sidebar-slider-item scrolled-start scrollable-y-bordered webgram-settings-container active">
@@ -111,7 +122,6 @@ async function openSettingsPanel() {
                         <div class="sidebar-left-section">
                             <div class="sidebar-left-section-content">
                                 <div class="sidebar-left-h2 sidebar-left-section-name i18n">User ID: ${currentUserId}</div>
-                                <div class="sidebar-left-section-caption i18n">Config: ${Object.keys(userConfig).length > 0 ? 'Server' : 'Local'}</div>
                             </div>
                         </div>
                     </div>
@@ -129,14 +139,14 @@ async function openSettingsPanel() {
                                         </div>
                                         <div class="row-title row-title-right">
                                             <label class="checkbox-field checkbox-without-caption checkbox-field-toggle disable-hover">
-                                                <input class="checkbox-field-input" type="checkbox" id="verified-toggle" ${userConfig.verified ? 'checked' : ''}>
+                                                <input class="checkbox-field-input" type="checkbox" id="verified-toggle" ${mergedConfig.verified ? 'checked' : ''}>
                                                 <div class="checkbox-toggle">
                                                     <div class="checkbox-toggle-circle"></div>
                                                 </div>
                                             </label>
                                         </div>
                                     </div>
-                                    <span class="tgico row-icon"></span>
+                                    <span class="tgico row-icon btn-icon sidebar-close-button"></span>
                                 </label>
                                 <label class="row no-subtitle row-with-toggle row-with-icon row-with-padding row-clickable hover-effect rp">
                                     <div class="c-ripple"></div>
@@ -146,7 +156,7 @@ async function openSettingsPanel() {
                                         </div>
                                         <div class="row-title row-title-right">
                                             <label class="checkbox-field checkbox-without-caption checkbox-field-toggle disable-hover">
-                                                <input class="checkbox-field-input" type="checkbox" id="premium-toggle" ${userConfig.premium ? 'checked' : ''}>
+                                                <input class="checkbox-field-input" type="checkbox" id="premium-toggle" ${mergedConfig.premium ? 'checked' : ''}>
                                                 <div class="checkbox-toggle">
                                                     <div class="checkbox-toggle-circle"></div>
                                                 </div>
@@ -170,7 +180,7 @@ async function openSettingsPanel() {
                                         <span class="i18n">Emoji Status ID</span>
                                     </div>
                                     <div class="row-title row-title-right row-title-right-secondary">
-                                        <input type="text" id="emoji-status-input" placeholder="Enter doc_id" value="${userConfig.emojiStatus || ''}" style="border: none; background: transparent; text-align: right; color: var(--secondary-text-color); width: 150px;">
+                                        <input type="text" id="emoji-status-input" placeholder="Enter doc_id" value="${mergedConfig.emojiStatus || ''}" style="border: none; background: transparent; text-align: right; color: var(--secondary-text-color); width: 150px;">
                                     </div>
                                 </div>
                             </div>
@@ -188,7 +198,7 @@ async function openSettingsPanel() {
                                         <span class="i18n">Gift IDs (comma separated)</span>
                                     </div>
                                     <div class="row-title row-title-right row-title-right-secondary">
-                                        <input type="text" id="gifts-input" placeholder="gift1,gift2,..." value="${userConfig.gifts ? userConfig.gifts.join(',') : ''}" style="border: none; background: transparent; text-align: right; color: var(--secondary-text-color); width: 150px;">
+                                        <input type="text" id="gifts-input" placeholder="gift1,gift2,..." value="${mergedConfig.gifts ? mergedConfig.gifts.join(',') : ''}" style="border: none; background: transparent; text-align: right; color: var(--secondary-text-color); width: 150px;">
                                     </div>
                                 </div>
                             </div>
@@ -209,7 +219,6 @@ async function openSettingsPanel() {
             </div>
         </div>
     `;
-
     cleanupOldPanels();
     const sidebarSlider = document.querySelector("#column-left > div.sidebar-slider.tabs-container");
     sidebarSlider.insertAdjacentHTML('beforeend', settingsPanelHTML);
@@ -217,9 +226,9 @@ async function openSettingsPanel() {
     document.getElementById('save-settings').addEventListener('click', saveSettings);
     document.querySelector('.webgram-settings-container .sidebar-close-button').addEventListener('click', () => {
         document.querySelector('.webgram-settings-container').remove();
-    });
+        
+    })
 }
-
 // Сохраняем настройки
 async function saveSettings() {
     if (!currentUserId) return;
