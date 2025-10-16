@@ -77,7 +77,6 @@ function cleanupWebgramPanel() {
 
 // Открываем панель настроек
 async function openSettingsPanel() {
-    cleanupWebgramPanel();
     
     // Получаем ID пользователя
     const profileName = document.querySelector("#column-left .profile-name .peer-title");
@@ -280,6 +279,7 @@ function resetSettings() {
     document.getElementById('custom-badge-input').value = '';
     
     showNotification('Settings reset to default');
+    cleanupWebgramPanel();
 }
 
 // Сохраняем настройки
