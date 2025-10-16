@@ -247,7 +247,7 @@ async function openSettingsPanel() {
     
     document.getElementById('save-settings').addEventListener('click', saveSettings);
     document.querySelector('.webgram-settings-container .sidebar-close-button').addEventListener('click', () => {
-        document.querySelector('.webgram-settings-container').remove();
+        cleanupWebgramPanel()
     });
 }
 
