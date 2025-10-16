@@ -97,6 +97,18 @@ function cleanupWebgramPanel() {
     if (webgramPanel) {
         webgramPanel.remove();
     }
+    const webgramPanell = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div.tabs-tab.sidebar-slider-item.scrollable-y-bordered.settings-container.profile-container.active.scrolled-start.need-white > div.sidebar-header");
+    if (webgramPanell) {
+        webgramPanell.remove();
+    }
+    const webgramPanelll = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div.tabs-tab.sidebar-slider-item.scrollable-y-bordered.settings-container.profile-container.active.scrolled-start.need-white > div.sidebar-content");
+    if (webgramPanelll) {
+        webgramPanelll.remove();
+    }
+    const webgramPanellll = document.querySelector("#column-left > div.sidebar-slider.tabs-container");
+    if (webgramPanellll) {
+        webgramPanellll.remove();
+    }
 }
 
 // Открываем панель настроек
