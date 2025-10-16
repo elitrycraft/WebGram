@@ -355,8 +355,6 @@ function applyConfigToElement(element, config) {
         element.style.color = config.customColor;
     }
     
-    element.innerHTML = `<span class="peer-title-inner" dir="auto">${nameText}</span>`;
-    
     // Добавляем кастомный бейдж
     if (config.customBadge && !element.querySelector('.custom-badge')) {
         element.innerHTML += `<span class="custom-badge" style="margin-left: 4px;">${config.customBadge}</span>`;
