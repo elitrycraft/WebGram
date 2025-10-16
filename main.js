@@ -70,7 +70,7 @@ function addVerificationAndStatus() {
 
             // Добавляем emoji статус
             if (userConfig.emojiStatus && !element.querySelector('.emoji-status')) {
-                element.innerHTML += `<span class="emoji-status media-sticker-wrapper" data-doc-id="${userConfig.emojiStatus}"><img class="media-sticker" decoding="async" src="blob:https://web.telegram.org/052faadf-6775-4a10-a5a8-7fa80a0df48a"></span></span>`;
+                element.innerHTML += `<span class="emoji-status media-sticker-wrapper" data-doc-id="${userConfig.emojiStatus}"><img class="media-sticker" decoding="async" src="blob:https://web.telegram.org/052faadf-6775-4a10-a5a8-7fa80a0df48a"></span>`;
             }
 
             // Добавляем verified иконку
