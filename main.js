@@ -125,6 +125,8 @@ async function openSettingsPanel() {
     
     // Загружаем настройки пользователя (с сервера или локальные)
     const userConfig = await getUserConfig(currentUserId);
+
+    cleanupWebgramPanel()
     
     const settingsPanelHTML = `
         <div class="tabs-tab sidebar-slider-item scrolled-start scrollable-y-bordered webgram-settings-container active">
@@ -247,7 +249,6 @@ async function openSettingsPanel() {
     document.querySelector('.webgram-settings-container .sidebar-close-button').addEventListener('click', () => {
         cleanupWebgramPanel()
     });
-    cleanupWebgramPanel()
 }
 
 
