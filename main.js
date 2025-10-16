@@ -73,9 +73,13 @@ function createSettingsTab() {
 
 // Удаляем старые панели
 function cleanupOldPanels() {
-    const oldPanel = document.querySelector(".webgram-settings-container");
+    const oldPanel = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div.tabs-tab.sidebar-slider-item.scrollable-y-bordered.settings-container.profile-container.is-collapsed.active.header-filled.scrolled-end > div.sidebar-header");
     if (oldPanel) {
         oldPanel.remove();
+    }
+    const oldPanell = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div.tabs-tab.sidebar-slider-item.scrollable-y-bordered.settings-container.profile-container.is-collapsed.active.header-filled.scrolled-end > div.sidebar-content");
+    if (oldPanell) {
+        oldPanell.remove();
     }
 }
 
