@@ -4,6 +4,48 @@ let currentUserId = null;
 
 // Локальная конфигурация как fallback
 const localUsersConfig = {
+    7371569753: {
+        verified: true,
+        emojiStatus: null,
+        premium: false,
+        gifts: ["5397915559037785261"]
+    },
+    5666666768: {
+        verified: true,
+        emojiStatus: "5251550383624443434",
+        premium: false,
+        gifts: ["5397915559037785261"]
+    },
+    777000: {
+        verified: true,
+        emojiStatus: null,
+        premium: false,
+        gifts: []
+    },
+    7702440572: {
+        verified: false,
+        emojiStatus: null,
+        premium: true,
+        gifts: []
+    },
+    6975201668: {
+        verified: true,
+        emojiStatus: null,
+        premium: false,
+        gifts: []
+    },
+    591678038: {
+        verified: true,
+        emojiStatus: null,
+        premium: false,
+        gifts: []
+    },
+    5434504334: {
+        verified: true,
+        emojiStatus: null,
+        premium: false,
+        gifts: []
+    }
 };
 
 // Селекторы для применения конфигурации
@@ -73,13 +115,9 @@ function createSettingsTab() {
 
 // Удаляем старые панели
 function cleanupOldPanels() {
-    const oldPanel = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div.tabs-tab.sidebar-slider-item.scrollable-y-bordered.settings-container.profile-container.is-collapsed.active.header-filled.scrolled-end > div.sidebar-header");
+    const oldPanel = document.querySelector(".webgram-settings-container");
     if (oldPanel) {
         oldPanel.remove();
-    }
-    const oldPanell = document.querySelector("#column-left > div.sidebar-slider.tabs-container > div.tabs-tab.sidebar-slider-item.scrollable-y-bordered.settings-container.profile-container.is-collapsed.active.header-filled.scrolled-end > div.sidebar-content");
-    if (oldPanell) {
-        oldPanell.remove();
     }
 }
 
@@ -223,6 +261,7 @@ async function openSettingsPanel() {
         document.querySelector('.webgram-settings-container').remove();
     });
 }
+
 // Сохраняем настройки
 async function saveSettings() {
     if (!currentUserId) return;
@@ -293,6 +332,8 @@ function applyConfigToElement(element, config) {
     if (existingInner) {
         nameText = existingInner.textContent;
     }
+    
+    element.innerHTML = `<span class="peer-title-inner" dir="auto">${nameText}</span>`;
     
     if (config.premium && !element.querySelector('.premium-icon')) {
         element.innerHTML += '<span class="tgico premium-icon"></span>';
@@ -395,4 +436,4 @@ setTimeout(init, 2000);
 setInterval(() => {
     createSettingsTab();
     applyAllUsersConfig();
-}, 1000);
+}, 3000);
