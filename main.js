@@ -9,7 +9,7 @@ const usersConfig = {
     },
     6612116145: {
         verified: false,
-        emojiStatus: "5316679430909732521"
+        emojiStatus: 5316679430909732521
     },
 };
 
