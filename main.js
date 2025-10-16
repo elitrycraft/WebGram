@@ -4,48 +4,6 @@ let currentUserId = null;
 
 // Локальная конфигурация как fallback
 const localUsersConfig = {
-    7371569753: {
-        verified: true,
-        emojiStatus: null,
-        premium: false,
-        gifts: ["5397915559037785261"]
-    },
-    5666666768: {
-        verified: true,
-        emojiStatus: "5251550383624443434",
-        premium: false,
-        gifts: ["5397915559037785261"]
-    },
-    777000: {
-        verified: true,
-        emojiStatus: null,
-        premium: false,
-        gifts: []
-    },
-    7702440572: {
-        verified: false,
-        emojiStatus: null,
-        premium: true,
-        gifts: []
-    },
-    6975201668: {
-        verified: true,
-        emojiStatus: null,
-        premium: false,
-        gifts: []
-    },
-    591678038: {
-        verified: true,
-        emojiStatus: null,
-        premium: false,
-        gifts: []
-    },
-    5434504334: {
-        verified: true,
-        emojiStatus: null,
-        premium: false,
-        gifts: []
-    }
 };
 
 // Селекторы для применения конфигурации
@@ -123,7 +81,6 @@ function cleanupOldPanels() {
 
 // Открываем панель настроек
 async function openSettingsPanel() {
-    cleanupOldPanels();
     
     const profileName = document.querySelector("#column-left .profile-name .peer-title");
     if (profileName) {
@@ -252,7 +209,7 @@ async function openSettingsPanel() {
             </div>
         </div>
     `;
-    
+    cleanupOldPanels();
     const sidebarSlider = document.querySelector("#column-left > div.sidebar-slider.tabs-container");
     sidebarSlider.insertAdjacentHTML('beforeend', settingsPanelHTML);
     
