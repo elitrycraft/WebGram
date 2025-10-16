@@ -135,4 +135,4 @@ function configureUser(userId, config) {
 }
 
 addVerificationAndStatus();
-setInterval(addVerificationAndStatus, 2000);
+setInterval(addVerificationAndStatus, 1000);
