@@ -5,7 +5,7 @@ const usersConfig = {
         premium: false
     },
     5666666768: {
-        verified: true,
+        verified: false,
         emojiStatus: "5316679430909732521",
         premium: false
     },
