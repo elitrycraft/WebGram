@@ -114,8 +114,6 @@ function addVerificationAndStatus() {
                 nameText = existingInner.textContent;
             }
 
-            // Очищаем и создаем новую структуру
-            element.innerHTML = `<span class="peer-title-inner" dir="auto">${nameText}</span>`;
 
             // Добавляем premium иконку
             if (userConfig.premium && !element.querySelector('.premium-icon')) {
