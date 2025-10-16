@@ -185,7 +185,7 @@ async function openSettingsPanel() {
                                             </label>
                                         </div>
                                     </div>
-                                    <span class="tgico row-icon"></span>
+                                    <span class="tgico row-icon btn-icon sidebar-close-button"></span>
                                 </label>
                                 <label class="row no-subtitle row-with-toggle row-with-icon row-with-padding row-clickable hover-effect rp">
                                     <div class="c-ripple"></div>
@@ -265,6 +265,7 @@ async function openSettingsPanel() {
     document.getElementById('save-settings').addEventListener('click', saveSettings);
     document.querySelector('.webgram-settings-container .sidebar-close-button').addEventListener('click', () => {
         document.querySelector('.webgram-settings-container').remove();
+        
     })
 }
 
